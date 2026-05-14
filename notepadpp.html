@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notepad++ Web</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Segoe+UI:wght@400;600&display=swap');
+
+  :root {
+    --bg: #1e1e1e;
+    --bg2: #252526;
+    --bg3: #2d2d30;
+    --bg4: #3c3c3c;
+    --border: #454545;
+    --accent: #569cd6;
+    --accent2: #ce9178;
+    --accent3: #6a9955;
+    --accent4: #dcdcaa;
+    --accent5: #c586c0;
+    --text: #d4d4d4;
+    --text2: #9d9d9d;
+    --text3: #cccccc;
+    --tab-active: #1e1e1e;
+    --tab-inactive: #2d2d30;
+    --tab-border: #569cd6;
+    --line-num: #858585;
+    --selection: #264f78;
+    --find-bg: #2d2d30;
+    --menu-hover: #3c3c3c;
+    --statusbar: #007acc;
+    --keyword: #569cd6;
+    --string: #ce9178;
+    --comment: #6a9955;
+    --number: #b5cea8;
+    --function: #dcdcaa;
+    --type: #4ec9b0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Courier Prime', 'Courier New', monospace;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* MENU BAR */
+  #menubar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+
+  .menu-item {
+    padding: 4px 10px;
+    font-size: 12px;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    color: var(--text);
+    cursor: pointer;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .menu-item:hover { background: var(--menu-hover); }
+
+  /* TOOLBAR */
+  #toolbar {
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 3px 6px;
+    gap: 2px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--text);
+    padding: 3px 7px;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.1s;
+  }
+  .toolbar-btn:hover {
+    background: var(--bg4);
+    border-color: var(--border);
+  }
+  .toolbar-btn:active { transform: scale(0.95); }
+  .toolbar-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 4px;
+  }
+
+  .lang-select {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    font-size: 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  /* TAB BAR */
+  #tabbar {
+    background: var(--tab-inactive);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    overflow-x: auto;
+    flex-shrink: 0;
+    scrollbar-width: thin;
+  }
+  #tabbar::-webkit-scrollbar { height: 3px; }
+  #tabbar::-webkit-scrollbar-track { background: var(--bg3); }
+  #tabbar::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px 5px 12px;
+    font-size: 12px;
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text2);
+    cursor: pointer;
+    border-right: 1px solid var(--border);
+    background: var(--tab-inactive);
+    white-space: nowrap;
+    border-top: 2px solid transparent;
+    transition: all 0.15s;
+    min-width: 100px;
+    position: relative;
+  }
+  .tab:hover { background: var(--bg4); color: var(--text); }
+  .tab.active {
+    background: var(--tab-active);
+    color: var(--text3);
+    border-top-color: var(--tab-border);
+  }
+  .tab-close {
+    margin-left: auto;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--text2);
+    transition: all 0.1s;
+    flex-shrink: 0;
+  }
+  .tab-close:hover { background: #e81123; color: white; }
+  .tab-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent2);
+    border-radius: 50%;
+    display: none;
+    flex-shrink: 0;
+  }
+  .tab.modified .tab-dot { display: block; }
+
+  .tab-new-btn {
+    padding: 5px 10px;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 16px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+  .tab-new-btn:hover { color: var(--text); background: var(--bg4); }
+
+  /* MAIN EDITOR AREA */
+  #editor-wrapper {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #line-numbers {
+    background: var(--bg2);
+    color: var(--line-num);
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 8px 12px 8px 8px;
+    text-align: right;
+    overflow: hidden;
+    user-select: none;
+    min-width: 48px;
+    border-right: 1px solid var(--border);
+    font-family: 'Courier Prime', monospace;
+    flex-shrink: 0;
+  }
+
+  #editor-container {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+  }
+
+  #editor {
+    width: 100%;
+    min-height: 100%;
+    background: transparent;
+    color: transparent;
+    caret-color: white;
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 8px 16px;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: 'Courier Prime', monospace;
+    position: absolute;
+    top: 0; left: 0;
+    z-index: 2;
+    white-space: pre;
+    overflow: hidden;
+  }
+
+  #highlight {
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 8px 16px;
+    font-family: 'Courier Prime', monospace;
+    white-space: pre;
+    pointer-events: none;
+    position: relative;
+    z-index: 1;
+    min-width: 100%;
+    min-height: 100%;
+    word-break: break-all;
+  }
+
+  /* Syntax highlighting classes */
+  .kw { color: var(--keyword); font-weight: bold; }
+  .str { color: var(--string); }
+  .cmt { color: var(--comment); font-style: italic; }
+  .num { color: var(--number); }
+  .fn { color: var(--function); }
+  .tp { color: var(--type); }
+  .op { color: var(--text2); }
+  .plain { color: var(--text); }
+
+  /* FIND BAR */
+  #findbar {
+    background: var(--find-bg);
+    border-top: 1px solid var(--border);
+    padding: 6px 12px;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  #findbar.visible { display: flex; }
+  #findbar input {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    font-size: 12px;
+    border-radius: 3px;
+    width: 180px;
+    font-family: 'Courier Prime', monospace;
+  }
+  #findbar input:focus { outline: none; border-color: var(--accent); }
+  #findbar label { font-size: 12px; font-family: 'Segoe UI', sans-serif; color: var(--text2); display: flex; align-items: center; gap: 4px; }
+  #findbar button {
+    background: var(--bg4);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    font-size: 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  #findbar button:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  #find-count { font-size: 11px; color: var(--text2); font-family: 'Segoe UI', sans-serif; }
+
+  /* STATUS BAR */
+  #statusbar {
+    background: var(--statusbar);
+    color: white;
+    font-size: 11px;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    padding: 2px 12px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+    height: 22px;
+  }
+  .status-item { white-space: nowrap; }
+  .status-sep { opacity: 0.4; }
+
+  /* Context menu */
+  #ctx-menu {
+    position: fixed;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 0;
+    z-index: 1000;
+    display: none;
+    box-shadow: 4px 4px 12px rgba(0,0,0,0.5);
+    min-width: 160px;
+  }
+  .ctx-item {
+    padding: 5px 16px;
+    font-size: 12px;
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ctx-item:hover { background: var(--accent); color: white; }
+  .ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
+  .ctx-shortcut { color: var(--text2); font-size: 11px; }
+  .ctx-item:hover .ctx-shortcut { color: rgba(255,255,255,0.7); }
+
+  /* Scrollbar styling */
+  #editor-container::-webkit-scrollbar { width: 10px; height: 10px; }
+  #editor-container::-webkit-scrollbar-track { background: var(--bg2); }
+  #editor-container::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+  #editor-container::-webkit-scrollbar-thumb:hover { background: #555; }
+
+  /* File input hidden */
+  #file-input { display: none; }
+
+  /* Minimap */
+  #minimap {
+    width: 60px;
+    background: var(--bg2);
+    border-left: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  #minimap canvas { display: block; }
+
+  /* Toast notification */
+  #toast {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg3);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 18px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'Segoe UI', sans-serif;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 9999;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- MENU BAR -->
+<div id="menubar">
+  <div class="menu-item" onclick="newFile()">File</div>
+  <div class="menu-item" onclick="editMenu()">Edit</div>
+  <div class="menu-item">Search</div>
+  <div class="menu-item">View</div>
+  <div class="menu-item">Language</div>
+  <div class="menu-item">Tools</div>
+  <div class="menu-item">Help</div>
+</div>
+
+<!-- TOOLBAR -->
+<div id="toolbar">
+  <button class="toolbar-btn" onclick="newFile()" title="New (Ctrl+N)">📄 New</button>
+  <button class="toolbar-btn" onclick="openFile()" title="Open (Ctrl+O)">📂 Open</button>
+  <button class="toolbar-btn" onclick="saveFile()" title="Save (Ctrl+S)">💾 Save</button>
+  <div class="toolbar-sep"></div>
+  <button class="toolbar-btn" onclick="document.execCommand('cut')" title="Cut">✂️</button>
+  <button class="toolbar-btn" onclick="document.execCommand('copy')" title="Copy">📋</button>
+  <button class="toolbar-btn" onclick="document.execCommand('paste')" title="Paste">📌</button>
+  <div class="toolbar-sep"></div>
+  <button class="toolbar-btn" onclick="undoAction()" title="Undo (Ctrl+Z)">↩️ Undo</button>
+  <button class="toolbar-btn" onclick="redoAction()" title="Redo (Ctrl+Y)">↪️ Redo</button>
+  <div class="toolbar-sep"></div>
+  <button class="toolbar-btn" onclick="toggleFind()" title="Find (Ctrl+F)">🔍 Find</button>
+  <button class="toolbar-btn" onclick="toggleWordWrap()" title="Word Wrap">↵ Wrap</button>
+  <div class="toolbar-sep"></div>
+  <select class="lang-select" id="lang-select" onchange="changeLang(this.value)">
+    <option value="plain">Plain Text</option>
+    <option value="js" selected>JavaScript</option>
+    <option value="html">HTML</option>
+    <option value="css">CSS</option>
+    <option value="python">Python</option>
+    <option value="json">JSON</option>
+  </select>
+  <div class="toolbar-sep"></div>
+  <button class="toolbar-btn" onclick="changeFontSize(-1)">A-</button>
+  <button class="toolbar-btn" onclick="changeFontSize(1)">A+</button>
+</div>
+
+<!-- TAB BAR -->
+<div id="tabbar">
+  <div class="tab active" id="tab-0" onclick="switchTab(0)">
+    <div class="tab-dot"></div>
+    <span class="tab-name">new_file.js</span>
+    <div class="tab-close" onclick="closeTab(event, 0)">×</div>
+  </div>
+  <div class="tab-new-btn" onclick="newFile()" title="New tab">+</div>
+</div>
+
+<!-- EDITOR AREA -->
+<div id="editor-wrapper">
+  <div id="line-numbers">1</div>
+  <div id="editor-container">
+    <div id="highlight" aria-hidden="true"></div>
+    <textarea id="editor" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></textarea>
+  </div>
+  <div id="minimap"><canvas id="minimap-canvas"></canvas></div>
+</div>
+
+<!-- FIND BAR -->
+<div id="findbar">
+  <span style="font-size:12px;font-family:'Segoe UI',sans-serif;color:var(--text2)">Find:</span>
+  <input type="text" id="find-input" placeholder="Search..." oninput="doFind()">
+  <input type="text" id="replace-input" placeholder="Replace...">
+  <label><input type="checkbox" id="find-case"> Case</label>
+  <label><input type="checkbox" id="find-regex"> Regex</label>
+  <button onclick="findNext()">▼ Next</button>
+  <button onclick="findPrev()">▲ Prev</button>
+  <button onclick="doReplace()">Replace</button>
+  <button onclick="doReplaceAll()">Replace All</button>
+  <span id="find-count"></span>
+  <button onclick="toggleFind()" style="margin-left:auto">✕</button>
+</div>
+
+<!-- STATUS BAR -->
+<div id="statusbar">
+  <span class="status-item" id="st-ln">Ln: 1</span>
+  <span class="status-sep">|</span>
+  <span class="status-item" id="st-col">Col: 1</span>
+  <span class="status-sep">|</span>
+  <span class="status-item" id="st-sel">Sel: 0</span>
+  <span class="status-sep">|</span>
+  <span class="status-item" id="st-words">Words: 0</span>
+  <span class="status-sep">|</span>
+  <span class="status-item" id="st-chars">Chars: 0</span>
+  <span class="status-sep">|</span>
+  <span class="status-item" id="st-lang">JavaScript</span>
+  <span class="status-sep">|</span>
+  <span class="status-item" id="st-enc">UTF-8</span>
+  <span class="status-sep">|</span>
+  <span class="status-item" id="st-eol">CRLF</span>
+</div>
+
+<!-- Context Menu -->
+<div id="ctx-menu">
+  <div class="ctx-item" onclick="document.execCommand('cut')">Cut <span class="ctx-shortcut">Ctrl+X</span></div>
+  <div class="ctx-item" onclick="document.execCommand('copy')">Copy <span class="ctx-shortcut">Ctrl+C</span></div>
+  <div class="ctx-item" onclick="document.execCommand('paste')">Paste <span class="ctx-shortcut">Ctrl+V</span></div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="selectAll()">Select All <span class="ctx-shortcut">Ctrl+A</span></div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="toUpperCase()">UPPERCASE</div>
+  <div class="ctx-item" onclick="toLowerCase()">lowercase</div>
+  <div class="ctx-item" onclick="trimLines()">Trim Whitespace</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="duplicateLine()">Duplicate Line</div>
+  <div class="ctx-item" onclick="deleteLine()">Delete Line</div>
+  <div class="ctx-item" onclick="commentLine()">Toggle Comment</div>
+</div>
+
+<input type="file" id="file-input" accept="*/*" onchange="handleFileOpen(event)">
+<div id="toast"></div>
+
+<script>
+// ============ STATE ============
+let tabs = [{
+  name: 'new_file.js',
+  content: `// Welcome to Notepad++ Web Edition!\n// A faithful recreation in the browser\n\nfunction greet(name) {\n  const message = "Hello, " + name + "!";\n  console.log(message);\n  return message;\n}\n\n// Try typing some code here\nconst languages = [\n  "JavaScript",\n  "Python",\n  "HTML",\n  "CSS"\n];\n\nfor (let i = 0; i < languages.length; i++) {\n  greet(languages[i]);\n}\n\n// Features:\n// ✓ Syntax highlighting\n// ✓ Line numbers\n// ✓ Multiple tabs\n// ✓ Find & Replace\n// ✓ Word wrap\n// ✓ File open/save\n// ✓ Undo / Redo\n// ✓ Status bar\n// ✓ Context menu`,
+  lang: 'js',
+  modified: false,
+  history: [],
+  historyIdx: -1,
+  scroll: 0,
+  cursor: 0
+}];
+let currentTab = 0;
+let wordWrap = false;
+let fontSize = 13;
+let findMatches = [];
+let findIdx = 0;
+let currentLang = 'js';
+
+const editor = document.getElementById('editor');
+const highlight = document.getElementById('highlight');
+const lineNums = document.getElementById('line-numbers');
+const findbar = document.getElementById('findbar');
+
+// ============ INIT ============
+function init() {
+  loadTab(0);
+  editor.addEventListener('input', onInput);
+  editor.addEventListener('keydown', onKeyDown);
+  editor.addEventListener('scroll', syncScroll);
+  editor.addEventListener('click', updateStatus);
+  editor.addEventListener('keyup', updateStatus);
+  editor.addEventListener('contextmenu', showCtxMenu);
+  document.addEventListener('click', hideCtxMenu);
+  document.getElementById('editor-container').addEventListener('scroll', syncScroll);
+  updateHighlight();
+  updateLineNumbers();
+  updateStatus();
+}
+
+function loadTab(idx) {
+  const t = tabs[idx];
+  editor.value = t.content;
+  currentLang = t.lang;
+  document.getElementById('lang-select').value = t.lang;
+  document.getElementById('st-lang').textContent = langName(t.lang);
+  updateHighlight();
+  updateLineNumbers();
+  updateStatus();
+  editor.scrollTop = t.scroll || 0;
+  syncScroll();
+}
+
+// ============ HIGHLIGHTING ============
+const LANGS = {
+  js: {
+    keywords: /\b(var|let|const|function|return|if|else|for|while|do|switch|case|break|continue|new|delete|typeof|instanceof|void|this|class|extends|import|export|default|try|catch|finally|throw|async|await|of|in|null|undefined|true|false)\b/g,
+    strings: /(["'`])(?:(?!\1)[^\\]|\\.)*?\1/g,
+    comments: /(\/\/[^\n]*)|(\/\*[\s\S]*?\*\/)/g,
+    numbers: /\b(\d+\.?\d*)\b/g,
+    functions: /\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(?=\()/g,
+    types: /\b(Array|Object|String|Number|Boolean|Promise|Map|Set|Symbol|Error|Date|RegExp|JSON|Math|console)\b/g,
+  },
+  python: {
+    keywords: /\b(def|return|if|elif|else|for|while|in|not|and|or|import|from|as|class|try|except|finally|with|pass|break|continue|lambda|yield|True|False|None|is|raise|del|global|nonlocal|assert|print)\b/g,
+    strings: /("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,
+    comments: /#[^\n]*/g,
+    numbers: /\b(\d+\.?\d*)\b/g,
+    functions: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g,
+    types: /\b(int|str|list|dict|tuple|set|float|bool|bytes|type|range|len|print|input|open)\b/g,
+  },
+  html: {
+    keywords: /(&lt;\/?[a-zA-Z][a-zA-Z0-9]*)/g,
+    strings: /("[^"]*"|'[^']*')/g,
+    comments: /(&lt;!--[\s\S]*?--&gt;)/g,
+    numbers: /\b(\d+)\b/g,
+    functions: null,
+    types: /\b(class|id|href|src|style|type|value|name|action|method|placeholder)\b/g,
+  },
+  css: {
+    keywords: /(@media|@keyframes|@import|@font-face|@supports|!important)\b/g,
+    strings: /("[^"]*"|'[^']*')/g,
+    comments: /(\/\*[\s\S]*?\*\/)/g,
+    numbers: /\b(\d+\.?\d*(px|em|rem|%|vh|vw|pt|s|ms)?)\b/g,
+    functions: /\b([a-zA-Z-]+)\s*(?=\()/g,
+    types: /\b(color|background|margin|padding|font|display|position|width|height|border|flex|grid|transform|transition|opacity|overflow|z-index)\b/g,
+  },
+  json: {
+    keywords: /\b(true|false|null)\b/g,
+    strings: /("(?:[^"\\]|\\.)*")/g,
+    comments: null,
+    numbers: /\b(-?\d+\.?\d*([eE][+-]?\d+)?)\b/g,
+    functions: null,
+    types: null,
+  },
+  plain: { keywords: null, strings: null, comments: null, numbers: null, functions: null, types: null }
+};
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function updateHighlight() {
+  const code = editor.value;
+  const lang = LANGS[currentLang] || LANGS.plain;
+  let esc = escapeHtml(code);
+
+  // Apply highlighting layers
+  if (lang.comments) esc = esc.replace(lang.comments, m => `\x00cmt\x01${m}\x02`);
+  if (lang.strings) esc = esc.replace(lang.strings, m => m.startsWith('\x00') ? m : `\x00str\x01${m}\x02`);
+  if (lang.numbers) esc = esc.replace(lang.numbers, (m, g) => esc.includes(`\x00`) ? m : `\x00num\x01${m}\x02`);
+  if (lang.types) esc = esc.replace(lang.types, m => `\x00tp\x01${m}\x02`);
+  if (lang.functions) esc = esc.replace(lang.functions, (m, name) => `\x00fn\x01${name}\x02(`);
+  if (lang.keywords) esc = esc.replace(lang.keywords, m => m.startsWith('\x00') ? m : `\x00kw\x01${m}\x02`);
+
+  esc = esc
+    .replace(/\x00cmt\x01([\s\S]*?)\x02/g, '<span class="cmt">$1</span>')
+    .replace(/\x00str\x01([\s\S]*?)\x02/g, '<span class="str">$1</span>')
+    .replace(/\x00num\x01([\s\S]*?)\x02/g, '<span class="num">$1</span>')
+    .replace(/\x00tp\x01([\s\S]*?)\x02/g, '<span class="tp">$1</span>')
+    .replace(/\x00fn\x01([\s\S]*?)\x02/g, '<span class="fn">$1</span>')
+    .replace(/\x00kw\x01([\s\S]*?)\x02/g, '<span class="kw">$1</span>');
+
+  highlight.innerHTML = esc + '\n';
+}
+
+function updateLineNumbers() {
+  const lines = editor.value.split('\n').length;
+  let nums = '';
+  for (let i = 1; i <= lines; i++) nums += i + '\n';
+  lineNums.textContent = nums;
+}
+
+function syncScroll() {
+  highlight.style.transform = `translateY(-${editor.scrollTop}px) translateX(-${editor.scrollLeft}px)`;
+  lineNums.style.transform = `translateY(-${editor.scrollTop}px)`;
+  updateMinimap();
+}
+
+// ============ INPUT ============
+function onInput() {
+  const t = tabs[currentTab];
+  const prev = t.content;
+  t.content = editor.value;
+  t.modified = true;
+
+  // History
+  t.history = t.history.slice(0, t.historyIdx + 1);
+  t.history.push(editor.value);
+  t.historyIdx++;
+  if (t.history.length > 200) { t.history.shift(); t.historyIdx--; }
+
+  updateTabMark();
+  updateHighlight();
+  updateLineNumbers();
+  updateStatus();
+  if (findbar.classList.contains('visible')) doFind();
+}
+
+function onKeyDown(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const s = editor.selectionStart;
+    const val = editor.value;
+    editor.value = val.slice(0, s) + '  ' + val.slice(editor.selectionEnd);
+    editor.selectionStart = editor.selectionEnd = s + 2;
+    onInput();
+    return;
+  }
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 'f') { e.preventDefault(); toggleFind(); }
+    if (e.key === 's') { e.preventDefault(); saveFile(); }
+    if (e.key === 'n') { e.preventDefault(); newFile(); }
+    if (e.key === 'o') { e.preventDefault(); openFile(); }
+    if (e.key === 'a') { e.preventDefault(); selectAll(); }
+    if (e.key === 'd') { e.preventDefault(); duplicateLine(); }
+  }
+}
+
+// ============ STATUS ============
+function updateStatus() {
+  const val = editor.value;
+  const pos = editor.selectionStart;
+  const lines = val.slice(0, pos).split('\n');
+  const ln = lines.length;
+  const col = lines[lines.length - 1].length + 1;
+  const sel = Math.abs(editor.selectionEnd - editor.selectionStart);
+  const words = val.trim() ? val.trim().split(/\s+/).length : 0;
+
+  document.getElementById('st-ln').textContent = `Ln: ${ln}`;
+  document.getElementById('st-col').textContent = `Col: ${col}`;
+  document.getElementById('st-sel').textContent = `Sel: ${sel}`;
+  document.getElementById('st-words').textContent = `Words: ${words}`;
+  document.getElementById('st-chars').textContent = `Chars: ${val.length}`;
+}
+
+// ============ TABS ============
+function renderTabs() {
+  const tabbar = document.getElementById('tabbar');
+  const newBtn = tabbar.querySelector('.tab-new-btn');
+  tabbar.querySelectorAll('.tab').forEach(e => e.remove());
+  tabs.forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'tab' + (i === currentTab ? ' active' : '') + (t.modified ? ' modified' : '');
+    div.id = `tab-${i}`;
+    div.onclick = () => switchTab(i);
+    div.innerHTML = `<div class="tab-dot"></div><span class="tab-name">${t.name}</span><div class="tab-close" onclick="closeTab(event,${i})">×</div>`;
+    tabbar.insertBefore(div, newBtn);
+  });
+}
+
+function switchTab(i) {
+  tabs[currentTab].scroll = editor.scrollTop;
+  tabs[currentTab].cursor = editor.selectionStart;
+  currentTab = i;
+  currentLang = tabs[i].lang;
+  loadTab(i);
+  renderTabs();
+}
+
+function newFile() {
+  tabs.push({ name: 'new_file.txt', content: '', lang: 'plain', modified: false, history: [''], historyIdx: 0, scroll: 0 });
+  switchTab(tabs.length - 1);
+}
+
+function closeTab(e, i) {
+  e.stopPropagation();
+  if (tabs.length === 1) { tabs[0].content = ''; tabs[0].modified = false; editor.value = ''; onInput(); return; }
+  tabs.splice(i, 1);
+  if (currentTab >= tabs.length) currentTab = tabs.length - 1;
+  loadTab(currentTab);
+  renderTabs();
+}
+
+function updateTabMark() {
+  const tabEl = document.getElementById(`tab-${currentTab}`);
+  if (tabEl) tabEl.classList.toggle('modified', tabs[currentTab].modified);
+}
+
+// ============ FILE OPS ============
+function openFile() { document.getElementById('file-input').click(); }
+
+function handleFileOpen(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const langMap = { js: 'js', jsx: 'js', ts: 'js', html: 'html', htm: 'html', css: 'css', py: 'python', json: 'json' };
+  const reader = new FileReader();
+  reader.onload = ev => {
+    tabs.push({ name: file.name, content: ev.target.result, lang: langMap[ext] || 'plain', modified: false, history: [ev.target.result], historyIdx: 0, scroll: 0 });
+    switchTab(tabs.length - 1);
+    toast(`Opened: ${file.name}`);
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function saveFile() {
+  const t = tabs[currentTab];
+  const blob = new Blob([editor.value], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = t.name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  t.modified = false;
+  updateTabMark();
+  toast(`Saved: ${t.name}`);
+}
+
+// ============ UNDO/REDO ============
+function undoAction() {
+  const t = tabs[currentTab];
+  if (t.historyIdx > 0) {
+    t.historyIdx--;
+    editor.value = t.history[t.historyIdx];
+    t.content = editor.value;
+    updateHighlight(); updateLineNumbers(); updateStatus();
+  }
+}
+function redoAction() {
+  const t = tabs[currentTab];
+  if (t.historyIdx < t.history.length - 1) {
+    t.historyIdx++;
+    editor.value = t.history[t.historyIdx];
+    t.content = editor.value;
+    updateHighlight(); updateLineNumbers(); updateStatus();
+  }
+}
+
+// ============ FIND/REPLACE ============
+function toggleFind() {
+  findbar.classList.toggle('visible');
+  if (findbar.classList.contains('visible')) document.getElementById('find-input').focus();
+}
+
+function doFind() {
+  const query = document.getElementById('find-input').value;
+  const caseSensitive = document.getElementById('find-case').checked;
+  const useRegex = document.getElementById('find-regex').checked;
+  findMatches = [];
+  if (!query) { document.getElementById('find-count').textContent = ''; return; }
+  const text = editor.value;
+  let flags = caseSensitive ? 'g' : 'gi';
+  let re;
+  try { re = new RegExp(useRegex ? query : query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), flags); }
+  catch(e) { return; }
+  let m;
+  while ((m = re.exec(text)) !== null) findMatches.push([m.index, m.index + m[0].length]);
+  document.getElementById('find-count').textContent = findMatches.length ? `${findMatches.length} match${findMatches.length>1?'es':''}` : 'No matches';
+  if (findMatches.length) highlightFind(0);
+}
+
+function findNext() { if (!findMatches.length) return; findIdx = (findIdx + 1) % findMatches.length; highlightFind(findIdx); }
+function findPrev() { if (!findMatches.length) return; findIdx = (findIdx - 1 + findMatches.length) % findMatches.length; highlightFind(findIdx); }
+
+function highlightFind(i) {
+  const [s, e] = findMatches[i];
+  editor.focus();
+  editor.setSelectionRange(s, e);
+  document.getElementById('find-count').textContent = `${i+1}/${findMatches.length}`;
+}
+
+function doReplace() {
+  const query = document.getElementById('find-input').value;
+  const rep = document.getElementById('replace-input').value;
+  if (!query || !findMatches.length) return;
+  const [s, e] = findMatches[findIdx];
+  const v = editor.value;
+  editor.value = v.slice(0,s) + rep + v.slice(e);
+  onInput(); doFind();
+}
+
+function doReplaceAll() {
+  const query = document.getElementById('find-input').value;
+  const rep = document.getElementById('replace-input').value;
+  const useRegex = document.getElementById('find-regex').checked;
+  const caseSensitive = document.getElementById('find-case').checked;
+  if (!query) return;
+  let flags = caseSensitive ? 'g' : 'gi';
+  let re;
+  try { re = new RegExp(useRegex ? query : query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), flags); }
+  catch(e) { return; }
+  const count = (editor.value.match(re) || []).length;
+  editor.value = editor.value.replace(re, rep);
+  onInput();
+  toast(`Replaced ${count} occurrence${count !== 1 ? 's' : ''}`);
+}
+
+// ============ EDITING UTILS ============
+function selectAll() { editor.select(); }
+
+function toUpperCase() {
+  const s = editor.selectionStart, e = editor.selectionEnd;
+  if (s === e) return;
+  editor.value = editor.value.slice(0,s) + editor.value.slice(s,e).toUpperCase() + editor.value.slice(e);
+  editor.setSelectionRange(s,e); onInput();
+}
+
+function toLowerCase() {
+  const s = editor.selectionStart, e = editor.selectionEnd;
+  if (s === e) return;
+  editor.value = editor.value.slice(0,s) + editor.value.slice(s,e).toLowerCase() + editor.value.slice(e);
+  editor.setSelectionRange(s,e); onInput();
+}
+
+function trimLines() {
+  editor.value = editor.value.split('\n').map(l => l.trimEnd()).join('\n');
+  onInput(); toast('Trailing whitespace removed');
+}
+
+function duplicateLine() {
+  const val = editor.value;
+  const pos = editor.selectionStart;
+  const lineStart = val.lastIndexOf('\n', pos - 1) + 1;
+  const lineEnd = val.indexOf('\n', pos);
+  const end = lineEnd === -1 ? val.length : lineEnd;
+  const line = val.slice(lineStart, end);
+  editor.value = val.slice(0, end) + '\n' + line + val.slice(end);
+  editor.selectionStart = editor.selectionEnd = end + 1 + (pos - lineStart);
+  onInput();
+}
+
+function deleteLine() {
+  const val = editor.value;
+  const pos = editor.selectionStart;
+  const lineStart = val.lastIndexOf('\n', pos - 1) + 1;
+  let lineEnd = val.indexOf('\n', pos);
+  if (lineEnd === -1) lineEnd = val.length; else lineEnd++;
+  editor.value = val.slice(0, lineStart) + val.slice(lineEnd);
+  editor.selectionStart = editor.selectionEnd = lineStart;
+  onInput();
+}
+
+function commentLine() {
+  const commentChars = { js: '//', python: '#', html: null, css: null, json: null, plain: '//' };
+  const char = commentChars[currentLang];
+  if (!char) return;
+  const val = editor.value;
+  const pos = editor.selectionStart;
+  const lineStart = val.lastIndexOf('\n', pos - 1) + 1;
+  const lineEnd = val.indexOf('\n', pos);
+  const end = lineEnd === -1 ? val.length : lineEnd;
+  const line = val.slice(lineStart, end);
+  let newLine;
+  if (line.trimStart().startsWith(char)) {
+    newLine = line.replace(char + ' ', '').replace(char, '');
+  } else {
+    newLine = char + ' ' + line;
+  }
+  editor.value = val.slice(0, lineStart) + newLine + val.slice(end);
+  onInput();
+}
+
+// ============ SETTINGS ============
+function toggleWordWrap() {
+  wordWrap = !wordWrap;
+  editor.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
+  highlight.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
+  toast(`Word Wrap: ${wordWrap ? 'ON' : 'OFF'}`);
+}
+
+function changeFontSize(delta) {
+  fontSize = Math.max(10, Math.min(24, fontSize + delta));
+  editor.style.fontSize = highlight.style.fontSize = lineNums.style.fontSize = fontSize + 'px';
+  updateLineNumbers();
+}
+
+function changeLang(lang) {
+  currentLang = lang;
+  tabs[currentTab].lang = lang;
+  document.getElementById('st-lang').textContent = langName(lang);
+  updateHighlight();
+}
+
+function langName(l) {
+  return { js: 'JavaScript', python: 'Python', html: 'HTML', css: 'CSS', json: 'JSON', plain: 'Plain Text' }[l] || l;
+}
+
+// ============ CONTEXT MENU ============
+function showCtxMenu(e) {
+  e.preventDefault();
+  const m = document.getElementById('ctx-menu');
+  m.style.display = 'block';
+  m.style.left = Math.min(e.clientX, window.innerWidth - 170) + 'px';
+  m.style.top = Math.min(e.clientY, window.innerHeight - 220) + 'px';
+}
+function hideCtxMenu() { document.getElementById('ctx-menu').style.display = 'none'; }
+
+// ============ MINIMAP ============
+function updateMinimap() {
+  const canvas = document.getElementById('minimap-canvas');
+  const mm = document.getElementById('minimap');
+  canvas.width = mm.offsetWidth;
+  canvas.height = mm.offsetHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#1e1e1e';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const lines = editor.value.split('\n');
+  const lineH = Math.max(1, canvas.height / Math.max(lines.length, 1));
+  lines.forEach((line, i) => {
+    const y = i * lineH;
+    if (line.trim()) {
+      ctx.fillStyle = 'rgba(100,140,200,0.3)';
+      ctx.fillRect(2, y, Math.min(line.length * 0.4, canvas.width - 4), Math.max(lineH - 0.5, 1));
+    }
+  });
+  // viewport indicator
+  const totalLines = lines.length;
+  const visibleLines = editor.clientHeight / (fontSize * 1.6);
+  const scrollFrac = editor.scrollTop / Math.max(editor.scrollHeight - editor.clientHeight, 1);
+  const vpH = (visibleLines / totalLines) * canvas.height;
+  const vpY = scrollFrac * (canvas.height - vpH);
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillRect(0, vpY, canvas.width, vpH);
+}
+
+// ============ TOAST ============
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ============ KEYBOARD SHORTCUTS ============
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && findbar.classList.contains('visible')) toggleFind();
+});
+
+// ============ GO ============
+init();
+renderTabs();
+updateMinimap();
+</script>
+</body>
+</html>
