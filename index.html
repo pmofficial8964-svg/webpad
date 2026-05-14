@@ -427,6 +427,190 @@
     pointer-events: none;
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ===== WELCOME PANEL ===== */
+  #welcome-panel {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(3px);
+    z-index: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: wc-fadein 0.3s ease;
+  }
+  @keyframes wc-fadein { from { opacity:0; } to { opacity:1; } }
+
+  #welcome-inner {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px 30px 20px;
+    width: min(680px, 94vw);
+    max-height: 88vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    animation: wc-slidein 0.3s cubic-bezier(.22,.68,0,1.2);
+  }
+  @keyframes wc-slidein { from { transform: translateY(24px) scale(0.97); opacity:0; } to { transform: none; opacity:1; } }
+  #welcome-inner::-webkit-scrollbar { width: 6px; }
+  #welcome-inner::-webkit-scrollbar-thumb { background: var(--bg4); border-radius:3px; }
+
+  #welcome-close {
+    position: absolute;
+    top: 12px; right: 14px;
+    background: none;
+    border: none;
+    color: var(--text2);
+    font-size: 18px;
+    cursor: pointer;
+    width: 28px; height: 28px;
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  #welcome-close:hover { background: #e81123; color: white; }
+
+  #welcome-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 6px;
+  }
+  #welcome-logo {
+    font-size: 40px;
+    line-height: 1;
+    filter: drop-shadow(0 2px 6px rgba(86,156,214,0.4));
+  }
+  #welcome-title {
+    font-size: 26px;
+    font-weight: 700;
+    font-family: "Courier Prime", monospace;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  #welcome-sub {
+    font-size: 13px;
+    color: var(--text2);
+    font-family: "Segoe UI", sans-serif;
+    margin-top: 2px;
+  }
+  #welcome-os-badge {
+    display: inline-block;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 12px;
+    font-family: "Segoe UI", sans-serif;
+    color: var(--text2);
+    margin-bottom: 18px;
+    margin-top: 10px;
+  }
+
+  .wc-section-title {
+    font-size: 12px;
+    font-family: "Segoe UI", sans-serif;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 18px 0 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 5px;
+  }
+
+  .wc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+  }
+  .wc-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-family: "Segoe UI", sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    transition: border-color 0.15s;
+  }
+  .wc-card:hover { border-color: var(--accent); }
+  .wc-card span { font-weight: 600; color: var(--text3); font-size: 12px; }
+  .wc-card small { color: var(--text2); font-size: 11px; }
+
+  .wc-shortcuts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
+  }
+  .wc-shortcut-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 12px;
+  }
+  .wc-shortcut-row:hover { background: var(--bg3); }
+  .wc-shortcut-label { color: var(--text2); }
+  .wc-shortcut-key {
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    border-bottom: 2px solid #555;
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-family: "Courier Prime", monospace;
+    font-size: 11px;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+
+  .wc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .wc-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: "Segoe UI", sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .wc-btn:hover { background: var(--bg4); border-color: var(--accent); }
+  .wc-btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    margin-left: auto;
+    font-weight: 600;
+  }
+  .wc-btn-primary:hover { background: #4a8bc4; border-color: #4a8bc4; }
+
+  #welcome-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    font-family: "Segoe UI", sans-serif;
+    color: var(--text2);
+  }
+  #welcome-footer input[type=checkbox] { accent-color: var(--accent); }
+
 </style>
 </head>
 <body>
@@ -552,6 +736,54 @@
     <textarea id="editor" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></textarea>
   </div>
   <div id="minimap"><canvas id="minimap-canvas"></canvas></div>
+
+  <!-- WELCOME PANEL -->
+  <div id="welcome-panel">
+    <div id="welcome-inner">
+      <button id="welcome-close" onclick="closeWelcome()" title="Close">&#x2715;</button>
+
+      <div id="welcome-header">
+        <div id="welcome-logo">&#x1F58A;&#xFE0F;</div>
+        <div>
+          <div id="welcome-title">Webpad</div>
+          <div id="welcome-sub">Notepad++ for the browser</div>
+        </div>
+      </div>
+
+      <div id="welcome-os-badge">Detecting OS...</div>
+
+      <div class="wc-section-title">&#x2728; Features</div>
+      <div class="wc-grid">
+        <div class="wc-card">&#x1F3A8;<span>Syntax Highlighting</span><small>JS, Python, HTML, CSS, JSON</small></div>
+        <div class="wc-card">&#x1F5C2;&#xFE0F;<span>Multiple Tabs</span><small>Open, close &amp; switch files</small></div>
+        <div class="wc-card">&#x1F522;<span>Line Numbers</span><small>With minimap sidebar</small></div>
+        <div class="wc-card">&#x1F50D;<span>Find &amp; Replace</span><small>Regex &amp; case-sensitive</small></div>
+        <div class="wc-card">&#x1F4C2;<span>Open / Save</span><small>Read &amp; download local files</small></div>
+        <div class="wc-card">&#x21A9;&#xFE0F;<span>Undo / Redo</span><small>Full history per tab</small></div>
+        <div class="wc-card">&#x1F4AC;<span>Word Wrap</span><small>Toggle from View menu</small></div>
+        <div class="wc-card">&#x1F5B1;&#xFE0F;<span>Context Menu</span><small>Right-click for quick actions</small></div>
+      </div>
+
+      <div class="wc-section-title">&#x2328;&#xFE0F; Keyboard Shortcuts <span id="wc-os-label"></span></div>
+      <div class="wc-shortcuts" id="wc-shortcuts-list"></div>
+
+      <div class="wc-section-title">&#x1F6E0;&#xFE0F; Quick Actions</div>
+      <div class="wc-actions">
+        <button class="wc-btn" onclick="closeWelcome(); newFile()">&#x1F4C4; New File</button>
+        <button class="wc-btn" onclick="closeWelcome(); openFile()">&#x1F4C2; Open File</button>
+        <button class="wc-btn" onclick="closeWelcome(); toggleFind()">&#x1F50D; Find &amp; Replace</button>
+        <button class="wc-btn wc-btn-primary" onclick="closeWelcome()">Start Editing &#x2192;</button>
+      </div>
+
+      <div id="welcome-footer">
+        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;">
+          <input type="checkbox" id="dont-show-again" onchange="toggleDontShow(this)"> Don&#x27;t show again
+        </label>
+        <span>Webpad v1.0 &mdash; Open Source</span>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- FIND BAR -->
@@ -586,6 +818,8 @@
   <span class="status-item" id="st-enc">UTF-8</span>
   <span class="status-sep">|</span>
   <span class="status-item" id="st-eol">CRLF</span>
+  <span class="status-sep">|</span>
+  <span class="status-item" id="st-os">🪟 Windows</span>
 </div>
 
 <!-- Context Menu -->
@@ -608,7 +842,50 @@
 <input type="file" id="file-input" accept="*/*" onchange="handleFileOpen(event)">
 <div id="toast"></div>
 
+<!-- MOBILE QUICK TOOLBAR (shown only on Android/iOS) -->
+<div id="mobile-toolbar" style="display:none; background:var(--bg3); border-top:1px solid var(--border); padding:4px 6px; gap:4px; flex-wrap:wrap; flex-shrink:0;">
+  <button class="toolbar-btn" onclick="undoAction()">↩ Undo</button>
+  <button class="toolbar-btn" onclick="redoAction()">↪ Redo</button>
+  <button class="toolbar-btn" onclick="duplicateLine()">⧉ Dup</button>
+  <button class="toolbar-btn" onclick="deleteLine()">🗑 Del Line</button>
+  <button class="toolbar-btn" onclick="commentLine()">// Comment</button>
+  <button class="toolbar-btn" onclick="toUpperCase()">AA</button>
+  <button class="toolbar-btn" onclick="toLowerCase()">aa</button>
+  <button class="toolbar-btn" onclick="toggleFind()">🔍 Find</button>
+  <button class="toolbar-btn" onclick="insertTab()">⇥ Tab</button>
+  <button class="toolbar-btn" onclick="saveFile()">💾 Save</button>
+</div>
+
 <script>
+// ============ OS DETECTION ============
+const ua = navigator.userAgent;
+const platform = navigator.platform || '';
+const OS = (() => {
+  if (/android/i.test(ua)) return 'android';
+  if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+  if (/mac/i.test(platform) || /macintosh/i.test(ua)) return 'mac';
+  if (/win/i.test(platform) || /windows/i.test(ua)) return 'windows';
+  if (/linux/i.test(platform)) return 'linux';
+  return 'windows';
+})();
+
+const isMobile = OS === 'android' || OS === 'ios';
+const isMac = OS === 'mac' || OS === 'ios';
+
+// Modifier key label: ⌘ for Mac/iOS, Ctrl for others
+const MOD = isMac ? '⌘' : 'Ctrl';
+const ALT = isMac ? '⌥' : 'Alt';
+const SHIFT = isMac ? '⇧' : 'Shift';
+
+// OS display info
+const OS_LABELS = {
+  windows: { label: 'Windows', icon: '🪟' },
+  mac:     { label: 'macOS',   icon: '🍎' },
+  linux:   { label: 'Linux',   icon: '🐧' },
+  android: { label: 'Android', icon: '🤖' },
+  ios:     { label: 'iOS',     icon: '📱' },
+};
+
 // ============ STATE ============
 let tabs = [{
   name: 'new_file.js',
@@ -646,6 +923,77 @@ function init() {
   updateHighlight();
   updateLineNumbers();
   updateStatus();
+  applyOSSettings();
+}
+
+function applyOSSettings() {
+  // Status bar OS label
+  const osInfo = OS_LABELS[OS] || OS_LABELS.windows;
+  document.getElementById('st-os').textContent = `${osInfo.icon} ${osInfo.label}`;
+  initWelcome();
+
+  // Show mobile toolbar on touch devices
+  if (isMobile) {
+    const mt = document.getElementById('mobile-toolbar');
+    mt.style.display = 'flex';
+    // Make editor font slightly bigger on mobile for readability
+    fontSize = 15;
+    editor.style.fontSize = highlight.style.fontSize = lineNums.style.fontSize = fontSize + 'px';
+  }
+
+  // Update all shortcut labels in menus and toolbar tooltips dynamically
+  updateShortcutLabels();
+}
+
+function updateShortcutLabels() {
+  // Map of text to find → replacement shortcut label
+  const shortcuts = [
+    ['Ctrl+N', `${MOD}+N`],
+    ['Ctrl+O', `${MOD}+O`],
+    ['Ctrl+S', `${MOD}+S`],
+    ['Ctrl+F', `${MOD}+F`],
+    ['Ctrl+H', `${MOD}+H`],
+    ['Ctrl+Z', `${MOD}+Z`],
+    ['Ctrl+Y', isMac ? `${MOD}+${SHIFT}+Z` : `${MOD}+Y`],
+    ['Ctrl+X', `${MOD}+X`],
+    ['Ctrl+C', `${MOD}+C`],
+    ['Ctrl+V', `${MOD}+V`],
+    ['Ctrl+A', `${MOD}+A`],
+    ['Ctrl+D', `${MOD}+D`],
+    ['Ctrl++', `${MOD}++`],
+    ['Ctrl+-', `${MOD}+-`],
+    ['Shift+F3', `${SHIFT}+F3`],
+  ];
+
+  // Update .dd-shortcut spans inside dropdowns
+  document.querySelectorAll('.dd-shortcut').forEach(el => {
+    let text = el.textContent;
+    shortcuts.forEach(([from, to]) => { text = text.replace(from, to); });
+    el.textContent = text;
+  });
+
+  // Update toolbar button titles
+  document.querySelectorAll('.toolbar-btn[title]').forEach(btn => {
+    let t = btn.getAttribute('title');
+    shortcuts.forEach(([from, to]) => { t = t.replace(from, to); });
+    btn.setAttribute('title', t);
+  });
+
+  // Update context menu shortcuts
+  document.querySelectorAll('.ctx-shortcut').forEach(el => {
+    let text = el.textContent;
+    shortcuts.forEach(([from, to]) => { text = text.replace(from, to); });
+    el.textContent = text;
+  });
+}
+
+function insertTab() {
+  const s = editor.selectionStart;
+  const val = editor.value;
+  editor.value = val.slice(0, s) + '  ' + val.slice(editor.selectionEnd);
+  editor.selectionStart = editor.selectionEnd = s + 2;
+  onInput();
+  editor.focus();
 }
 
 function loadTab(idx) {
@@ -783,14 +1131,54 @@ function onKeyDown(e) {
     onInput();
     return;
   }
-  if (e.ctrlKey || e.metaKey) {
-    if (e.key === 'f') { e.preventDefault(); toggleFind(); }
-    if (e.key === 's') { e.preventDefault(); saveFile(); }
-    if (e.key === 'n') { e.preventDefault(); newFile(); }
-    if (e.key === 'o') { e.preventDefault(); openFile(); }
-    if (e.key === 'a') { e.preventDefault(); selectAll(); }
-    if (e.key === 'd') { e.preventDefault(); duplicateLine(); }
+
+  const mod = isMac ? e.metaKey : e.ctrlKey;
+  const ctrl = e.ctrlKey;
+  const alt = e.altKey;
+
+  if (mod) {
+    switch (e.key.toLowerCase()) {
+      case 'f': e.preventDefault(); toggleFind(); break;
+      case 's': e.preventDefault(); saveFile(); break;
+      case 'n': e.preventDefault(); newFile(); break;
+      case 'o': e.preventDefault(); openFile(); break;
+      case 'a': e.preventDefault(); selectAll(); break;
+      case 'd': e.preventDefault(); duplicateLine(); break;
+      case 'z': e.preventDefault(); e.shiftKey ? redoAction() : undoAction(); break;
+      case 'y': if (!isMac) { e.preventDefault(); redoAction(); } break;
+      case '+':
+      case '=': e.preventDefault(); changeFontSize(1); break;
+      case '-': e.preventDefault(); changeFontSize(-1); break;
+      case 'h': e.preventDefault(); toggleFind(); break;
+    }
   }
+
+  // Mac: Cmd+Shift+Z = redo (already handled above via e.shiftKey check)
+  // F3 / Shift+F3 = find next/prev
+  if (e.key === 'F3') { e.preventDefault(); e.shiftKey ? findPrev() : findNext(); }
+  if (e.key === 'Escape' && findbar.classList.contains('visible')) toggleFind();
+
+  // Android/iOS: Alt+arrow for word jump (best effort)
+  if (isMobile && alt) {
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); moveWordLeft(); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); moveWordRight(); }
+  }
+}
+
+function moveWordLeft() {
+  let pos = editor.selectionStart;
+  const val = editor.value;
+  pos = Math.max(0, pos - 1);
+  while (pos > 0 && /\W/.test(val[pos])) pos--;
+  while (pos > 0 && /\w/.test(val[pos - 1])) pos--;
+  editor.selectionStart = editor.selectionEnd = pos;
+}
+function moveWordRight() {
+  let pos = editor.selectionEnd;
+  const val = editor.value;
+  while (pos < val.length && /\W/.test(val[pos])) pos++;
+  while (pos < val.length && /\w/.test(val[pos])) pos++;
+  editor.selectionStart = editor.selectionEnd = pos;
 }
 
 // ============ STATUS ============
@@ -1101,6 +1489,72 @@ function toast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2000);
 }
+
+
+// ============ WELCOME PANEL ============
+function initWelcome() {
+  // Check if user dismissed it permanently
+  try {
+    if (localStorage.getItem('webpad-welcome-dismissed') === '1') {
+      document.getElementById('welcome-panel').style.display = 'none';
+      return;
+    }
+  } catch(e) {}
+
+  // Set OS badge
+  const osInfo = OS_LABELS[OS] || OS_LABELS.windows;
+  document.getElementById('welcome-os-badge').textContent = osInfo.icon + '  Running on ' + osInfo.label;
+  document.getElementById('wc-os-label').textContent = '(' + osInfo.label + ')';
+
+  // Build shortcuts list
+  const shortcuts = [
+    ['New File',        MOD+'+N'],
+    ['Open File',       MOD+'+O'],
+    ['Save File',       MOD+'+S'],
+    ['Find / Replace',  MOD+'+F'],
+    ['Find Next',       'F3'],
+    ['Find Previous',   SHIFT+'+F3'],
+    ['Undo',            MOD+'+Z'],
+    ['Redo',            isMac ? MOD+'+'+SHIFT+'+Z' : MOD+'+Y'],
+    ['Select All',      MOD+'+A'],
+    ['Duplicate Line',  MOD+'+D'],
+    ['Toggle Comment',  'Right-click'],
+    ['Zoom In',         MOD+'++'],
+    ['Zoom Out',        MOD+'+-'],
+    ['Close Find',      'Escape'],
+    ['Indent',          'Tab'],
+    ['Toggle Wrap',     'View menu'],
+  ];
+
+  const container = document.getElementById('wc-shortcuts-list');
+  container.innerHTML = shortcuts.map(([label, key]) =>
+    '<div class="wc-shortcut-row">' +
+      '<span class="wc-shortcut-label">' + label + '</span>' +
+      '<span class="wc-shortcut-key">' + key + '</span>' +
+    '</div>'
+  ).join('');
+}
+
+function closeWelcome() {
+  const panel = document.getElementById('welcome-panel');
+  panel.style.animation = 'wc-fadein 0.2s ease reverse';
+  setTimeout(() => panel.style.display = 'none', 180);
+}
+
+function toggleDontShow(cb) {
+  try {
+    if (cb.checked) localStorage.setItem('webpad-welcome-dismissed', '1');
+    else localStorage.removeItem('webpad-welcome-dismissed');
+  } catch(e) {}
+}
+
+// Close welcome on Escape (editor keydown handles it too but welcome might be open)
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const panel = document.getElementById('welcome-panel');
+    if (panel && panel.style.display !== 'none') closeWelcome();
+  }
+});
 
 // ============ MENU ============
 function toggleMenu(id) {
