@@ -59,6 +59,8 @@
     padding: 0 4px;
     height: 28px;
     flex-shrink: 0;
+    position: relative;
+    z-index: 500;
   }
 
   .menu-item {
@@ -69,8 +71,41 @@
     cursor: pointer;
     border-radius: 2px;
     white-space: nowrap;
+    position: relative;
   }
   .menu-item:hover { background: var(--menu-hover); }
+  .menu-item.open { background: var(--accent); color: white; }
+
+  .dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 0 4px 4px 4px;
+    min-width: 200px;
+    box-shadow: 4px 4px 12px rgba(0,0,0,0.5);
+    z-index: 9999;
+    padding: 4px 0;
+  }
+  .menu-item.open .dropdown { display: block; }
+
+  .dd-item {
+    padding: 5px 16px;
+    font-size: 12px;
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+  }
+  .dd-item:hover { background: var(--accent); color: white; }
+  .dd-item:hover .dd-shortcut { color: rgba(255,255,255,0.7); }
+  .dd-shortcut { color: var(--text2); font-size: 11px; white-space: nowrap; }
+  .dd-sep { height: 1px; background: var(--border); margin: 4px 0; }
 
   /* TOOLBAR */
   #toolbar {
@@ -205,7 +240,7 @@
     color: var(--line-num);
     font-size: 13px;
     line-height: 1.6;
-    padding: 8px 12px 8px 8px;
+    padding: 8px 8px 8px 8px;
     text-align: right;
     overflow: hidden;
     user-select: none;
@@ -213,6 +248,14 @@
     border-right: 1px solid var(--border);
     font-family: 'Courier Prime', monospace;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  #line-numbers div {
+    display: block;
+    height: calc(13px * 1.6);
+    line-height: 1.6;
+    white-space: nowrap;
   }
 
   #editor-container {
@@ -389,14 +432,77 @@
 <body>
 
 <!-- MENU BAR -->
-<div id="menubar">
-  <div class="menu-item" onclick="newFile()">File</div>
-  <div class="menu-item" onclick="editMenu()">Edit</div>
-  <div class="menu-item">Search</div>
-  <div class="menu-item">View</div>
-  <div class="menu-item">Language</div>
-  <div class="menu-item">Tools</div>
-  <div class="menu-item">Help</div>
+<div id="menubar" onclick="closeAllMenus(event)">
+  <div class="menu-item" onclick="toggleMenu('menu-file')">File
+    <div class="dropdown" id="menu-file">
+      <div class="dd-item" onclick="newFile()">New <span class="dd-shortcut">Ctrl+N</span></div>
+      <div class="dd-item" onclick="openFile()">Open <span class="dd-shortcut">Ctrl+O</span></div>
+      <div class="dd-sep"></div>
+      <div class="dd-item" onclick="saveFile()">Save <span class="dd-shortcut">Ctrl+S</span></div>
+      <div class="dd-sep"></div>
+      <div class="dd-item" onclick="closeTab(event, currentTab)">Close Tab</div>
+    </div>
+  </div>
+  <div class="menu-item" onclick="toggleMenu('menu-edit')">Edit
+    <div class="dropdown" id="menu-edit">
+      <div class="dd-item" onclick="undoAction()">Undo <span class="dd-shortcut">Ctrl+Z</span></div>
+      <div class="dd-item" onclick="redoAction()">Redo <span class="dd-shortcut">Ctrl+Y</span></div>
+      <div class="dd-sep"></div>
+      <div class="dd-item" onclick="document.execCommand('cut')">Cut <span class="dd-shortcut">Ctrl+X</span></div>
+      <div class="dd-item" onclick="document.execCommand('copy')">Copy <span class="dd-shortcut">Ctrl+C</span></div>
+      <div class="dd-sep"></div>
+      <div class="dd-item" onclick="selectAll()">Select All <span class="dd-shortcut">Ctrl+A</span></div>
+      <div class="dd-sep"></div>
+      <div class="dd-item" onclick="toUpperCase()">UPPERCASE</div>
+      <div class="dd-item" onclick="toLowerCase()">lowercase</div>
+      <div class="dd-item" onclick="trimLines()">Trim Whitespace</div>
+      <div class="dd-sep"></div>
+      <div class="dd-item" onclick="duplicateLine()">Duplicate Line <span class="dd-shortcut">Ctrl+D</span></div>
+      <div class="dd-item" onclick="deleteLine()">Delete Line</div>
+      <div class="dd-item" onclick="commentLine()">Toggle Comment</div>
+    </div>
+  </div>
+  <div class="menu-item" onclick="toggleMenu('menu-search')">Search
+    <div class="dropdown" id="menu-search">
+      <div class="dd-item" onclick="toggleFind()">Find <span class="dd-shortcut">Ctrl+F</span></div>
+      <div class="dd-item" onclick="toggleFind()">Replace <span class="dd-shortcut">Ctrl+H</span></div>
+      <div class="dd-sep"></div>
+      <div class="dd-item" onclick="findNext()">Find Next <span class="dd-shortcut">F3</span></div>
+      <div class="dd-item" onclick="findPrev()">Find Prev <span class="dd-shortcut">Shift+F3</span></div>
+    </div>
+  </div>
+  <div class="menu-item" onclick="toggleMenu('menu-view')">View
+    <div class="dropdown" id="menu-view">
+      <div class="dd-item" onclick="toggleWordWrap()">Toggle Word Wrap</div>
+      <div class="dd-sep"></div>
+      <div class="dd-item" onclick="changeFontSize(1)">Zoom In <span class="dd-shortcut">Ctrl++</span></div>
+      <div class="dd-item" onclick="changeFontSize(-1)">Zoom Out <span class="dd-shortcut">Ctrl+-</span></div>
+    </div>
+  </div>
+  <div class="menu-item" onclick="toggleMenu('menu-lang')">Language
+    <div class="dropdown" id="menu-lang">
+      <div class="dd-item" onclick="changeLang('plain')">Plain Text</div>
+      <div class="dd-item" onclick="changeLang('js')">JavaScript</div>
+      <div class="dd-item" onclick="changeLang('html')">HTML</div>
+      <div class="dd-item" onclick="changeLang('css')">CSS</div>
+      <div class="dd-item" onclick="changeLang('python')">Python</div>
+      <div class="dd-item" onclick="changeLang('json')">JSON</div>
+    </div>
+  </div>
+  <div class="menu-item" onclick="toggleMenu('menu-tools')">Tools
+    <div class="dropdown" id="menu-tools">
+      <div class="dd-item" onclick="trimLines()">Trim All Lines</div>
+      <div class="dd-item" onclick="sortLines()">Sort Lines A→Z</div>
+      <div class="dd-item" onclick="removeDuplicates()">Remove Duplicate Lines</div>
+      <div class="dd-sep"></div>
+      <div class="dd-item" onclick="countWords()">Word Count</div>
+    </div>
+  </div>
+  <div class="menu-item" onclick="toggleMenu('menu-help')">Help
+    <div class="dropdown" id="menu-help">
+      <div class="dd-item" onclick="showAbout()">About Webpad</div>
+    </div>
+  </div>
 </div>
 
 <!-- TOOLBAR -->
@@ -440,7 +546,7 @@
 
 <!-- EDITOR AREA -->
 <div id="editor-wrapper">
-  <div id="line-numbers">1</div>
+  <div id="line-numbers"></div>
   <div id="editor-container">
     <div id="highlight" aria-hidden="true"></div>
     <textarea id="editor" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></textarea>
@@ -630,9 +736,15 @@ function updateHighlight() {
 
 function updateLineNumbers() {
   const lines = editor.value.split('\n').length;
-  let nums = '';
-  for (let i = 1; i <= lines; i++) nums += i + '\n';
-  lineNums.textContent = nums;
+  const current = lineNums.children.length;
+  for (let i = current + 1; i <= lines; i++) {
+    const d = document.createElement('div');
+    d.textContent = i;
+    lineNums.appendChild(d);
+  }
+  while (lineNums.children.length > lines) {
+    lineNums.removeChild(lineNums.lastChild);
+  }
 }
 
 function syncScroll() {
@@ -927,6 +1039,9 @@ function toggleWordWrap() {
 function changeFontSize(delta) {
   fontSize = Math.max(10, Math.min(24, fontSize + delta));
   editor.style.fontSize = highlight.style.fontSize = lineNums.style.fontSize = fontSize + 'px';
+  // Update each line number div height to match new font size
+  const lineH = fontSize * 1.6 + 'px';
+  Array.from(lineNums.children).forEach(d => d.style.height = lineH);
   updateLineNumbers();
 }
 
@@ -987,7 +1102,45 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 
-// ============ KEYBOARD SHORTCUTS ============
+// ============ MENU ============
+function toggleMenu(id) {
+  const all = document.querySelectorAll('.menu-item');
+  all.forEach(m => { if (m.id !== id) m.classList.remove('open'); });
+  const item = event.currentTarget;
+  item.classList.toggle('open');
+  event.stopPropagation();
+}
+function closeAllMenus(e) {
+  if (!e.target.closest('.menu-item')) {
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('open'));
+  }
+}
+document.addEventListener('click', () => {
+  document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('open'));
+});
+
+// ============ EXTRA TOOLS ============
+function sortLines() {
+  const lines = editor.value.split('\n');
+  editor.value = lines.sort((a, b) => a.localeCompare(b)).join('\n');
+  onInput(); toast('Lines sorted A→Z');
+}
+function removeDuplicates() {
+  const lines = editor.value.split('\n');
+  const seen = new Set();
+  editor.value = lines.filter(l => { if (seen.has(l)) return false; seen.add(l); return true; }).join('\n');
+  onInput(); toast('Duplicate lines removed');
+}
+function countWords() {
+  const val = editor.value;
+  const words = val.trim() ? val.trim().split(/\s+/).length : 0;
+  const lines = val.split('\n').length;
+  const chars = val.length;
+  toast(`Words: ${words} | Lines: ${lines} | Chars: ${chars}`);
+}
+function showAbout() {
+  toast('Webpad — Notepad++ inspired web editor');
+}
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && findbar.classList.contains('visible')) toggleFind();
 });
