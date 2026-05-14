@@ -106,6 +106,7 @@
   .dd-item:hover .dd-shortcut { color: rgba(255,255,255,0.7); }
   .dd-shortcut { color: var(--text2); font-size: 11px; white-space: nowrap; }
   .dd-sep { height: 1px; background: var(--border); margin: 4px 0; }
+  .dd-group { padding: 4px 16px 2px; font-size: 10px; font-family: "Segoe UI", sans-serif; color: var(--accent); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; pointer-events: none; }
 
   /* TOOLBAR */
   #toolbar {
@@ -617,7 +618,7 @@
 
 <!-- MENU BAR -->
 <div id="menubar" onclick="closeAllMenus(event)">
-  <div class="menu-item" onclick="toggleMenu('menu-file')">File
+  <div class="menu-item" onclick=\"toggleMenu('menu-file', event)\">File
     <div class="dropdown" id="menu-file">
       <div class="dd-item" onclick="newFile()">New <span class="dd-shortcut">Ctrl+N</span></div>
       <div class="dd-item" onclick="openFile()">Open <span class="dd-shortcut">Ctrl+O</span></div>
@@ -627,7 +628,7 @@
       <div class="dd-item" onclick="closeTab(event, currentTab)">Close Tab</div>
     </div>
   </div>
-  <div class="menu-item" onclick="toggleMenu('menu-edit')">Edit
+  <div class="menu-item" onclick=\"toggleMenu('menu-edit', event)\">Edit
     <div class="dropdown" id="menu-edit">
       <div class="dd-item" onclick="undoAction()">Undo <span class="dd-shortcut">Ctrl+Z</span></div>
       <div class="dd-item" onclick="redoAction()">Redo <span class="dd-shortcut">Ctrl+Y</span></div>
@@ -646,7 +647,7 @@
       <div class="dd-item" onclick="commentLine()">Toggle Comment</div>
     </div>
   </div>
-  <div class="menu-item" onclick="toggleMenu('menu-search')">Search
+  <div class="menu-item" onclick=\"toggleMenu('menu-search', event)\">Search
     <div class="dropdown" id="menu-search">
       <div class="dd-item" onclick="toggleFind()">Find <span class="dd-shortcut">Ctrl+F</span></div>
       <div class="dd-item" onclick="toggleFind()">Replace <span class="dd-shortcut">Ctrl+H</span></div>
@@ -655,7 +656,7 @@
       <div class="dd-item" onclick="findPrev()">Find Prev <span class="dd-shortcut">Shift+F3</span></div>
     </div>
   </div>
-  <div class="menu-item" onclick="toggleMenu('menu-view')">View
+  <div class="menu-item" onclick=\"toggleMenu('menu-view', event)\">View
     <div class="dropdown" id="menu-view">
       <div class="dd-item" onclick="toggleWordWrap()">Toggle Word Wrap</div>
       <div class="dd-sep"></div>
@@ -663,7 +664,7 @@
       <div class="dd-item" onclick="changeFontSize(-1)">Zoom Out <span class="dd-shortcut">Ctrl+-</span></div>
     </div>
   </div>
-  <div class="menu-item" onclick="toggleMenu('menu-lang')">Language
+  <div class="menu-item" onclick=\"toggleMenu('menu-lang', event)\">Language
     <div class="dropdown" id="menu-lang">
       <div class="dd-item" onclick="changeLang('plain')">Plain Text</div>
       <div class="dd-item" onclick="changeLang('js')">JavaScript</div>
@@ -673,7 +674,7 @@
       <div class="dd-item" onclick="changeLang('json')">JSON</div>
     </div>
   </div>
-  <div class="menu-item" onclick="toggleMenu('menu-tools')">Tools
+  <div class="menu-item" onclick=\"toggleMenu('menu-tools', event)\">Tools
     <div class="dropdown" id="menu-tools">
       <div class="dd-item" onclick="trimLines()">Trim All Lines</div>
       <div class="dd-item" onclick="sortLines()">Sort Lines A→Z</div>
@@ -682,7 +683,7 @@
       <div class="dd-item" onclick="countWords()">Word Count</div>
     </div>
   </div>
-  <div class="menu-item" onclick="toggleMenu('menu-help')">Help
+  <div class="menu-item" onclick=\"toggleMenu('menu-help', event)\">Help
     <div class="dropdown" id="menu-help">
       <div class="dd-item" onclick="showAbout()">About Webpad</div>
     </div>
@@ -706,12 +707,32 @@
   <button class="toolbar-btn" onclick="toggleWordWrap()" title="Word Wrap">↵ Wrap</button>
   <div class="toolbar-sep"></div>
   <select class="lang-select" id="lang-select" onchange="changeLang(this.value)">
-    <option value="plain">Plain Text</option>
-    <option value="js" selected>JavaScript</option>
-    <option value="html">HTML</option>
-    <option value="css">CSS</option>
-    <option value="python">Python</option>
-    <option value="json">JSON</option>
+    <optgroup label="Web">
+      <option value="js" selected>JavaScript</option>
+      <option value="ts">TypeScript</option>
+      <option value="html">HTML</option>
+      <option value="css">CSS</option>
+      <option value="json">JSON</option>
+      <option value="php">PHP</option>
+    </optgroup>
+    <optgroup label="Systems">
+      <option value="c">C</option>
+      <option value="cpp">C++</option>
+      <option value="rust">Rust</option>
+      <option value="go">Go</option>
+    </optgroup>
+    <optgroup label="JVM">
+      <option value="java">Java</option>
+      <option value="scala">Scala</option>
+    </optgroup>
+    <optgroup label="Scripting">
+      <option value="python">Python</option>
+      <option value="ruby">Ruby</option>
+      <option value="bash">Bash/Shell</option>
+    </optgroup>
+    <optgroup label="Other">
+      <option value="plain">Plain Text</option>
+    </optgroup>
   </select>
   <div class="toolbar-sep"></div>
   <button class="toolbar-btn" onclick="changeFontSize(-1)">A-</button>
@@ -1051,6 +1072,86 @@ const LANGS = {
     functions: null,
     types: null,
   },
+  c: {
+    keywords: /\b(auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while|NULL|true|false)\b/g,
+    strings: /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,
+    comments: /(\/\/[^\n]*)|(\/\*[\s\S]*?\*\/)/g,
+    numbers: /\b(\d+\.?\d*[uUlLfF]*)\b/g,
+    functions: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g,
+    types: /\b(int|char|float|double|long|short|unsigned|signed|void|size_t|FILE|bool|uint8_t|uint16_t|uint32_t|uint64_t|int8_t|int16_t|int32_t|int64_t)\b/g,
+  },
+  cpp: {
+    keywords: /\b(alignas|alignof|and|auto|bitand|bitor|bool|break|case|catch|char|class|compl|concept|const|consteval|constexpr|constinit|const_cast|continue|co_await|co_return|co_yield|decltype|default|delete|do|double|dynamic_cast|else|enum|explicit|export|extern|false|float|for|friend|goto|if|inline|int|long|mutable|namespace|new|noexcept|not|not_eq|nullptr|operator|or|or_eq|private|protected|public|register|reinterpret_cast|requires|return|short|signed|sizeof|static|static_assert|static_cast|struct|switch|template|this|thread_local|throw|true|try|typedef|typeid|typename|union|unsigned|using|virtual|void|volatile|wchar_t|while|xor|override|final|NULL)\b/g,
+    strings: /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,
+    comments: /(\/\/[^\n]*)|(\/\*[\s\S]*?\*\/)/g,
+    numbers: /\b(\d+\.?\d*[uUlLfF]*)\b/g,
+    functions: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g,
+    types: /\b(int|char|float|double|long|short|unsigned|signed|void|bool|auto|size_t|string|vector|map|set|pair|unique_ptr|shared_ptr|optional|variant|tuple|array|list|queue|stack|deque|cout|cin|cerr|endl|std)\b/g,
+  },
+  java: {
+    keywords: /\b(abstract|assert|boolean|break|byte|case|catch|char|class|const|continue|default|do|double|else|enum|extends|final|finally|float|for|goto|if|implements|import|instanceof|int|interface|long|native|new|package|private|protected|public|return|short|static|strictfp|super|switch|synchronized|this|throw|throws|transient|try|void|volatile|while|true|false|null|var|record|sealed|permits|yield)\b/g,
+    strings: /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,
+    comments: /(\/\/[^\n]*)|(\/\*[\s\S]*?\*\/)/g,
+    numbers: /\b(\d+\.?\d*[lLfFdD]?)\b/g,
+    functions: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g,
+    types: /\b(String|Integer|Long|Double|Float|Boolean|Character|Byte|Short|Object|Class|List|ArrayList|LinkedList|Map|HashMap|Set|HashSet|Optional|Stream|Collection|Iterator|Runnable|Thread|Exception|RuntimeException|System|Math|Arrays|Collections)\b/g,
+  },
+  scala: {
+    keywords: /\b(abstract|case|catch|class|def|do|else|extends|false|final|finally|for|forSome|if|implicit|import|lazy|match|new|null|object|override|package|private|protected|return|sealed|super|this|throw|trait|try|true|type|val|var|while|with|yield|given|using|enum|export|then|derives|opaque|inline|transparent|open|extension|end)\b/g,
+    strings: /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,
+    comments: /(\/\/[^\n]*)|(\/\*[\s\S]*?\*\/)/g,
+    numbers: /\b(\d+\.?\d*[lLfFdD]?)\b/g,
+    functions: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g,
+    types: /\b(Int|Long|Double|Float|Boolean|Char|Byte|Short|String|Unit|Any|AnyVal|AnyRef|Nothing|Null|Option|Some|None|List|Seq|Map|Set|Vector|Array|Future|Try|Either|Left|Right)\b/g,
+  },
+  ts: {
+    keywords: /\b(abstract|as|async|await|break|case|catch|class|const|continue|debugger|declare|default|delete|do|else|enum|export|extends|false|finally|for|from|function|if|implements|import|in|instanceof|interface|is|keyof|let|module|namespace|new|null|of|override|package|private|protected|public|readonly|return|require|static|super|switch|this|throw|true|try|type|typeof|undefined|using|var|void|while|with|yield)\b/g,
+    strings: /(["'`])(?:(?!\1)[^\\]|\\.)*?\1/g,
+    comments: /(\/\/[^\n]*)|(\/\*[\s\S]*?\*\/)/g,
+    numbers: /\b(\d+\.?\d*)\b/g,
+    functions: /\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(?=\()/g,
+    types: /\b(string|number|boolean|any|void|never|unknown|object|symbol|bigint|Array|Object|Promise|Map|Set|Record|Partial|Required|Readonly|Pick|Omit|Exclude|Extract|NonNullable|ReturnType|InstanceType)\b/g,
+  },
+  go: {
+    keywords: /\b(break|case|chan|const|continue|default|defer|else|fallthrough|for|func|go|goto|if|import|interface|map|package|range|return|select|struct|switch|type|var|true|false|nil|iota)\b/g,
+    strings: /("(?:[^"\\]|\\.)*"|`[^`]*`)/g,
+    comments: /(\/\/[^\n]*)|(\/\*[\s\S]*?\*\/)/g,
+    numbers: /\b(\d+\.?\d*)\b/g,
+    functions: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g,
+    types: /\b(bool|byte|complex64|complex128|error|float32|float64|int|int8|int16|int32|int64|rune|string|uint|uint8|uint16|uint32|uint64|uintptr|any|comparable)\b/g,
+  },
+  rust: {
+    keywords: /\b(as|async|await|break|const|continue|crate|dyn|else|enum|extern|false|fn|for|if|impl|in|let|loop|match|mod|move|mut|pub|ref|return|self|Self|static|struct|super|trait|true|type|union|unsafe|use|where|while)\b/g,
+    strings: /("(?:[^"\\]|\\.)*")/g,
+    comments: /(\/\/[^\n]*)|(\/\*[\s\S]*?\*\/)/g,
+    numbers: /\b(\d+\.?\d*(?:u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64)?)\b/g,
+    functions: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\(!?)/g,
+    types: /\b(bool|char|str|String|u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64|Vec|Box|Option|Result|Some|None|Ok|Err|HashMap|HashSet|Rc|Arc|Cell|RefCell|Mutex)\b/g,
+  },
+  php: {
+    keywords: /\b(abstract|and|array|as|break|callable|case|catch|class|clone|const|continue|declare|default|die|do|echo|else|elseif|empty|enddeclare|endfor|endforeach|endif|endswitch|endwhile|eval|exit|extends|final|finally|fn|for|foreach|function|global|goto|if|implements|include|include_once|instanceof|insteadof|interface|isset|list|match|namespace|new|null|or|print|private|protected|public|readonly|require|require_once|return|static|switch|throw|trait|try|unset|use|var|while|xor|yield|true|false|NULL)\b/g,
+    strings: /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,
+    comments: /(\/\/[^\n]*|#[^\n]*)|(\/\*[\s\S]*?\*\/)/g,
+    numbers: /\b(\d+\.?\d*)\b/g,
+    functions: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g,
+    types: /\b(int|float|string|bool|array|object|callable|iterable|void|null|mixed|never|self|static|parent|stdClass|Exception|ArrayAccess|Iterator|Countable)\b/g,
+  },
+  ruby: {
+    keywords: /\b(BEGIN|END|alias|and|begin|break|case|class|def|do|else|elsif|end|ensure|false|for|if|in|module|next|nil|not|or|redo|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield|attr_accessor|attr_reader|attr_writer|require|require_relative|include|extend|prepend|private|protected|public|raise|fail)\b/g,
+    strings: /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,
+    comments: /#[^\n]*/g,
+    numbers: /\b(\d+\.?\d*)\b/g,
+    functions: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g,
+    types: /\b(String|Integer|Float|Array|Hash|Symbol|NilClass|TrueClass|FalseClass|Numeric|Object|Class|Module|Proc|Range|Regexp|IO|File|Dir|Time|Date|Struct|Comparable|Enumerable)\b/g,
+  },
+  bash: {
+    keywords: /\b(if|then|else|elif|fi|for|while|until|do|done|case|esac|function|return|in|select|export|local|readonly|declare|typeset|unset|set|source|alias|cd|echo|printf|read|exit|break|continue|shift|trap|wait|exec|eval|true|false)\b/g,
+    strings: /("(?:[^"\\]|\\.)*"|'[^']*')/g,
+    comments: /#[^\n]*/g,
+    numbers: /\b(\d+)\b/g,
+    functions: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\(\))/g,
+    types: /(\$\{?[a-zA-Z_][a-zA-Z0-9_]*\}?)/g,
+  },
   plain: { keywords: null, strings: null, comments: null, numbers: null, functions: null, types: null }
 };
 
@@ -1248,7 +1349,7 @@ function handleFileOpen(e) {
   const file = e.target.files[0];
   if (!file) return;
   const ext = file.name.split('.').pop().toLowerCase();
-  const langMap = { js: 'js', jsx: 'js', ts: 'js', html: 'html', htm: 'html', css: 'css', py: 'python', json: 'json' };
+  const langMap = { js:'js', jsx:'js', ts:'ts', tsx:'ts', html:'html', htm:'html', css:'css', py:'python', json:'json', c:'c', h:'c', cpp:'cpp', cc:'cpp', cxx:'cpp', hpp:'cpp', java:'java', scala:'scala', sc:'scala', rs:'rust', go:'go', php:'php', rb:'ruby', sh:'bash', bash:'bash', zsh:'bash' };
   const reader = new FileReader();
   reader.onload = ev => {
     tabs.push({ name: file.name, content: ev.target.result, lang: langMap[ext] || 'plain', modified: false, history: [ev.target.result], historyIdx: 0, scroll: 0 });
@@ -1397,7 +1498,7 @@ function deleteLine() {
 }
 
 function commentLine() {
-  const commentChars = { js: '//', python: '#', html: null, css: null, json: null, plain: '//' };
+  const commentChars = { js:'//', ts:'//', python:'#', html:null, css:null, json:null, plain:'//', c:'//', cpp:'//', java:'//', scala:'//', rust:'//', go:'//', php:'//', ruby:'#', bash:'#' };
   const char = commentChars[currentLang];
   if (!char) return;
   const val = editor.value;
@@ -1437,11 +1538,15 @@ function changeLang(lang) {
   currentLang = lang;
   tabs[currentTab].lang = lang;
   document.getElementById('st-lang').textContent = langName(lang);
+  const sel = document.getElementById('lang-select');
+  if (sel) sel.value = lang;
+  document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('open'));
   updateHighlight();
+  toast('Language: ' + langName(lang));
 }
 
 function langName(l) {
-  return { js: 'JavaScript', python: 'Python', html: 'HTML', css: 'CSS', json: 'JSON', plain: 'Plain Text' }[l] || l;
+  return { js:'JavaScript', ts:'TypeScript', python:'Python', html:'HTML', css:'CSS', json:'JSON', plain:'Plain Text', c:'C', cpp:'C++', java:'Java', scala:'Scala', rust:'Rust', go:'Go', php:'PHP', ruby:'Ruby', bash:'Bash/Shell' }[l] || l;
 }
 
 // ============ CONTEXT MENU ============
@@ -1557,12 +1662,14 @@ document.addEventListener('keydown', e => {
 });
 
 // ============ MENU ============
-function toggleMenu(id) {
+function toggleMenu(id, e) {
+  e = e || window.event;
+  e.stopPropagation();
   const all = document.querySelectorAll('.menu-item');
-  all.forEach(m => { if (m.id !== id) m.classList.remove('open'); });
-  const item = event.currentTarget;
-  item.classList.toggle('open');
-  event.stopPropagation();
+  const item = e.currentTarget;
+  const isOpen = item.classList.contains('open');
+  all.forEach(m => m.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
 }
 function closeAllMenus(e) {
   if (!e.target.closest('.menu-item')) {
