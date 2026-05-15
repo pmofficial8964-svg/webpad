@@ -804,17 +804,35 @@
       <div class="dd-item" onclick="changeFontSize(-1)">Zoom Out <span class="dd-shortcut">Ctrl+-</span></div>
     </div>
   </div>
-  <div class="menu-item" onclick=\"toggleMenu('menu-lang', event)\">Language
-    <div class="dropdown" id="menu-lang">
-      <div class="dd-item" onclick="changeLang('plain')">Plain Text</div>
+  <div class="menu-item" onclick="toggleMenu('menu-lang', event)">Language
+    <div class="dropdown" id="menu-lang" style="min-width:180px">
+      <div class="dd-group">Web</div>
       <div class="dd-item" onclick="changeLang('js')">JavaScript</div>
+      <div class="dd-item" onclick="changeLang('ts')">TypeScript</div>
       <div class="dd-item" onclick="changeLang('html')">HTML</div>
       <div class="dd-item" onclick="changeLang('css')">CSS</div>
-      <div class="dd-item" onclick="changeLang('python')">Python</div>
       <div class="dd-item" onclick="changeLang('json')">JSON</div>
+      <div class="dd-item" onclick="changeLang('php')">PHP</div>
+      <div class="dd-sep"></div>
+      <div class="dd-group">Systems</div>
+      <div class="dd-item" onclick="changeLang('c')">C</div>
+      <div class="dd-item" onclick="changeLang('cpp')">C++</div>
+      <div class="dd-item" onclick="changeLang('rust')">Rust</div>
+      <div class="dd-item" onclick="changeLang('go')">Go</div>
+      <div class="dd-sep"></div>
+      <div class="dd-group">JVM</div>
+      <div class="dd-item" onclick="changeLang('java')">Java</div>
+      <div class="dd-item" onclick="changeLang('scala')">Scala</div>
+      <div class="dd-sep"></div>
+      <div class="dd-group">Scripting</div>
+      <div class="dd-item" onclick="changeLang('python')">Python</div>
+      <div class="dd-item" onclick="changeLang('ruby')">Ruby</div>
+      <div class="dd-item" onclick="changeLang('bash')">Bash / Shell</div>
+      <div class="dd-sep"></div>
+      <div class="dd-item" onclick="changeLang('plain')">Plain Text</div>
     </div>
   </div>
-  <div class="menu-item" onclick=\"toggleMenu('menu-tools', event)\">Tools
+  <div class="menu-item" onclick="toggleMenu('menu-tools', event)">Tools
     <div class="dropdown" id="menu-tools">
       <div class="dd-item" onclick="trimLines()">Trim All Lines</div>
       <div class="dd-item" onclick="sortLines()">Sort Lines A→Z</div>
@@ -823,13 +841,23 @@
       <div class="dd-item" onclick="countWords()">Word Count</div>
     </div>
   </div>
-  <div class="menu-item" onclick=\"toggleMenu('menu-help', event)\">Help
+  <div class="menu-item" onclick="toggleMenu('menu-help', event)">Help
     <div class="dropdown" id="menu-help">
       <div class="dd-item" onclick="showAbout()">About Webpad</div>
     </div>
   </div>
+  <div id="user-badge" onclick="toggleUserMenu(event)">
+    <div id="user-avatar">G</div>
+    <span id="user-name-display">Guest</span>
+    <div id="user-menu">
+      <div class="user-menu-info" id="user-menu-info">Guest — session not saved</div>
+      <div class="user-menu-item" onclick="saveSession()">&#x1F4BE; Save Session</div>
+      <div class="user-menu-item" onclick="loadSession()">&#x1F4C2; Load Session</div>
+      <div class="user-menu-sep"></div>
+      <div class="user-menu-item" onclick="doSignOut()">&#x1F6AA; Sign Out</div>
+    </div>
+  </div>
 </div>
-
 <!-- TOOLBAR -->
 <div id="toolbar">
   <button class="toolbar-btn" onclick="newFile()" title="New (Ctrl+N)">📄 New</button>
@@ -1327,15 +1355,52 @@ function updateHighlight() {
 }
 
 function updateLineNumbers() {
-  const lines = editor.value.split('\n').length;
-  const current = lineNums.children.length;
-  for (let i = current + 1; i <= lines; i++) {
+  const value = editor.value;
+  const lineArr = value.split('\n');
+  const totalLines = lineArr.length;
+
+  // Rebuild DOM nodes if count changed
+  while (lineNums.children.length < totalLines) {
     const d = document.createElement('div');
-    d.textContent = i;
     lineNums.appendChild(d);
   }
-  while (lineNums.children.length > lines) {
+  while (lineNums.children.length > totalLines) {
     lineNums.removeChild(lineNums.lastChild);
+  }
+  // Always update text
+  Array.from(lineNums.children).forEach((d, i) => { d.textContent = i + 1; });
+
+  if (!wordWrap) {
+    // Fixed height per line — simple
+    const lh = fontSize * 1.6;
+    Array.from(lineNums.children).forEach(d => { d.style.height = lh + 'px'; });
+    return;
+  }
+
+  // Word-wrap mode: measure how many visual rows each logical line occupies
+  // We do this by temporarily creating a hidden measuring div with same style
+  let measurer = document.getElementById('_ln_measurer');
+  if (!measurer) {
+    measurer = document.createElement('div');
+    measurer.id = '_ln_measurer';
+    measurer.style.cssText = [
+      'position:absolute','visibility:hidden','top:0','left:0',
+      'white-space:pre-wrap','word-break:break-word',
+      'padding:8px 16px','box-sizing:border-box','pointer-events:none'
+    ].join(';');
+    document.getElementById('editor-container').appendChild(measurer);
+  }
+  measurer.style.width = editor.clientWidth + 'px';
+  measurer.style.fontSize = fontSize + 'px';
+  measurer.style.lineHeight = '1.6';
+  measurer.style.fontFamily = getComputedStyle(editor).fontFamily;
+
+  const singleLineH = fontSize * 1.6;
+  const divs = lineNums.children;
+  for (let i = 0; i < totalLines; i++) {
+    measurer.textContent = lineArr[i] || '\u200b'; // zero-width space for empty lines
+    const h = Math.max(measurer.scrollHeight, singleLineH);
+    divs[i].style.height = h + 'px';
   }
 }
 
@@ -1669,7 +1734,12 @@ function toggleWordWrap() {
   wordWrap = !wordWrap;
   editor.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
   highlight.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
-  toast(`Word Wrap: ${wordWrap ? 'ON' : 'OFF'}`);
+  // Remove stale measurer so it's recreated with new settings
+  const old = document.getElementById('_ln_measurer');
+  if (old) old.remove();
+  updateLineNumbers();
+  syncScroll();
+  toast('Word Wrap: ' + (wordWrap ? 'ON' : 'OFF'));
 }
 
 function changeFontSize(delta) {
@@ -2036,11 +2106,14 @@ function doSignUp() {
 function loginSuccess(username) {
   currentUser = username;
   document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('user-avatar').textContent = username[0].toUpperCase();
-  document.getElementById('user-name-display').textContent = username;
-  document.getElementById('user-menu-info').textContent = 'Signed in as ' + username;
+  // Update user badge UI
+  const av = document.getElementById('user-avatar');
+  const nd = document.getElementById('user-name-display');
+  const mi = document.getElementById('user-menu-info');
+  if (av) av.textContent = username[0].toUpperCase();
+  if (nd) nd.textContent = username;
+  if (mi) mi.textContent = 'Signed in as ' + username;
   restoreSession(username);
-  toast('Welcome, ' + username + '!');
 }
 
 function continueAsGuest() {
@@ -2080,22 +2153,33 @@ function sessionKey(user) { return 'webpad-session-' + user; }
 
 function saveSession() {
   if (!currentUser) { toast('Sign in to save sessions'); return; }
+  // Capture current scroll before saving
+  tabs[currentTab].scroll = document.getElementById('editor-container').scrollTop;
+  tabs[currentTab].content = editor.value;
   const session = {
     tabs: tabs.map(t => ({ name: t.name, content: t.content, lang: t.lang, scroll: t.scroll || 0 })),
     currentTab, fontSize, wordWrap, savedAt: Date.now()
   };
   try {
     localStorage.setItem(sessionKey(currentUser), JSON.stringify(session));
-    toast('Session saved \u2713');
+    toast('Session saved ✓');
   } catch(e) { toast('Save failed: storage may be full'); }
 }
 
 function restoreSession(username) {
   try {
     const raw = localStorage.getItem(sessionKey(username));
-    if (!raw) { toast('No saved session found. Starting fresh.'); return; }
+    if (!raw) {
+      toast('Welcome, ' + username + '! No saved session yet.');
+      renderTabs();
+      return;
+    }
     const session = JSON.parse(raw);
-    if (!session.tabs || !session.tabs.length) return;
+    if (!session.tabs || !session.tabs.length) {
+      toast('Welcome back, ' + username + '!');
+      renderTabs();
+      return;
+    }
     tabs = session.tabs.map(t => ({
       name: t.name || 'untitled',
       content: t.content || '',
@@ -2106,6 +2190,7 @@ function restoreSession(username) {
       scroll: t.scroll || 0
     }));
     currentTab = Math.min(session.currentTab || 0, tabs.length - 1);
+    currentLang = tabs[currentTab].lang || 'plain';
     fontSize = session.fontSize || 13;
     wordWrap = !!session.wordWrap;
     editor.style.fontSize = highlight.style.fontSize = lineNums.style.fontSize = fontSize + 'px';
@@ -2113,8 +2198,12 @@ function restoreSession(username) {
     loadTab(currentTab);
     renderTabs();
     const d = new Date(session.savedAt);
-    toast('Session restored (saved ' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString() + ')');
-  } catch(e) { console.warn('Session restore failed:', e); }
+    toast('Welcome back, ' + username + '! Session from ' + d.toLocaleDateString() + ' restored.');
+  } catch(e) {
+    console.warn('Session restore failed:', e);
+    toast('Welcome, ' + username + '! (Could not restore session)');
+    renderTabs();
+  }
 }
 
 function loadSession() {
