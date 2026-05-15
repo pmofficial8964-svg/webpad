@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Notepad++ Web</title>
+<title>Webpad — Code Editor</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Segoe+UI:wght@400;600&display=swap');
 
@@ -49,6 +49,8 @@
     overflow: hidden;
     user-select: none;
   }
+  #editor { user-select: text; }
+  #highlight { user-select: none; }
 
   /* MENU BAR */
   #menubar {
@@ -682,9 +684,77 @@
   }
   @keyframes voice-dot-blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
 
+
+  /* ===== LOGIN SCREEN ===== */
+  #login-screen {
+    position: fixed; inset: 0; background: var(--bg);
+    z-index: 99999; display: flex; align-items: center;
+    justify-content: center; font-family: 'Segoe UI', sans-serif;
+  }
+  #login-box {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 36px 40px 28px;
+    width: min(420px, 94vw);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+    animation: wc-slidein 0.35s cubic-bezier(.22,.68,0,1.2);
+  }
+  #login-logo { font-size: 44px; text-align: center; margin-bottom: 8px; }
+  #login-title { font-size: 24px; font-weight: 700; color: var(--accent); text-align: center; font-family: 'Courier Prime', monospace; letter-spacing: -0.5px; }
+  #login-sub { font-size: 13px; color: var(--text2); text-align: center; margin-bottom: 24px; margin-top: 4px; }
+  .login-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+  .login-tab { flex: 1; padding: 8px; text-align: center; font-size: 13px; cursor: pointer; color: var(--text2); border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .login-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .login-field { margin-bottom: 14px; }
+  .login-field label { display: block; font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; }
+  .login-field input { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 9px 12px; font-size: 14px; font-family: 'Segoe UI', sans-serif; outline: none; transition: border-color 0.15s; }
+  .login-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(86,156,214,0.2); }
+  .login-submit { width: 100%; background: var(--accent); color: white; border: none; border-radius: 6px; padding: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Segoe UI', sans-serif; margin-top: 4px; transition: background 0.15s; }
+  .login-submit:hover { background: #4a8bc4; }
+  #login-error { color: #f66; font-size: 12px; margin-top: 10px; text-align: center; min-height: 18px; }
+  #login-guest { display: block; text-align: center; margin-top: 16px; font-size: 12px; color: var(--text2); cursor: pointer; }
+  #login-guest:hover { color: var(--text); text-decoration: underline; }
+  .login-form { display: none; }
+  .login-form.active { display: block; }
+  #user-badge { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 11px; font-family: 'Segoe UI', sans-serif; color: var(--text2); padding: 0 10px; cursor: pointer; border-radius: 3px; position: relative; height: 100%; }
+  #user-badge:hover { background: var(--menu-hover); color: var(--text); }
+  #user-avatar { width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+  #user-menu { display: none; position: absolute; top: 100%; right: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; min-width: 180px; padding: 4px 0; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 9999; }
+  #user-badge.open #user-menu { display: block; }
+  .user-menu-item { padding: 7px 14px; font-size: 12px; color: var(--text); cursor: pointer; font-family: 'Segoe UI', sans-serif; }
+  .user-menu-item:hover { background: var(--accent); color: white; }
+  .user-menu-sep { height: 1px; background: var(--border); margin: 4px 0; }
+  .user-menu-info { padding: 8px 14px 6px; font-size: 11px; color: var(--text2); border-bottom: 1px solid var(--border); margin-bottom: 4px; pointer-events: none; }
+
 </style>
 </head>
 <body>
+
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div id="login-box">
+    <div id="login-logo">&#x1F58A;&#xFE0F;</div>
+    <div id="login-title">Webpad</div>
+    <div id="login-sub">Sign in to save your workspace across sessions</div>
+    <div class="login-tabs">
+      <div class="login-tab active" id="tab-signin" onclick="showLoginForm('signin')">Sign In</div>
+      <div class="login-tab" id="tab-signup" onclick="showLoginForm('signup')">Create Account</div>
+    </div>
+    <div class="login-form active" id="form-signin">
+      <div class="login-field"><label>Username</label><input type="text" id="si-user" placeholder="Enter username" autocomplete="username"></div>
+      <div class="login-field"><label>Password</label><input type="password" id="si-pass" placeholder="Enter password" autocomplete="current-password"></div>
+      <button class="login-submit" onclick="doSignIn()">Sign In</button>
+    </div>
+    <div class="login-form" id="form-signup">
+      <div class="login-field"><label>Username</label><input type="text" id="su-user" placeholder="Choose a username" autocomplete="username"></div>
+      <div class="login-field"><label>Email (optional)</label><input type="email" id="su-email" placeholder="you@example.com" autocomplete="email"></div>
+      <div class="login-field"><label>Password</label><input type="password" id="su-pass" placeholder="Choose a password" autocomplete="new-password"></div>
+      <button class="login-submit" onclick="doSignUp()">Create Account</button>
+    </div>
+    <div id="login-error"></div>
+    <span id="login-guest" onclick="continueAsGuest()">Continue as Guest (session not saved)</span>
+  </div>
+</div>
 
 <!-- MENU BAR -->
 <div id="menubar" onclick="closeAllMenus(event)">
@@ -1099,7 +1169,7 @@ function loadTab(idx) {
   updateHighlight();
   updateLineNumbers();
   updateStatus();
-  editor.scrollTop = t.scroll || 0;
+  document.getElementById('editor-container').scrollTop = t.scroll || 0;
   syncScroll();
 }
 
@@ -1240,7 +1310,7 @@ function updateHighlight() {
   // Apply highlighting layers
   if (lang.comments) esc = esc.replace(lang.comments, m => `\x00cmt\x01${m}\x02`);
   if (lang.strings) esc = esc.replace(lang.strings, m => m.startsWith('\x00') ? m : `\x00str\x01${m}\x02`);
-  if (lang.numbers) esc = esc.replace(lang.numbers, (m, g) => esc.includes(`\x00`) ? m : `\x00num\x01${m}\x02`);
+  if (lang.numbers) esc = esc.replace(lang.numbers, (m) => m.startsWith('\x00') ? m : `\x00num\x01${m}\x02`);
   if (lang.types) esc = esc.replace(lang.types, m => `\x00tp\x01${m}\x02`);
   if (lang.functions) esc = esc.replace(lang.functions, (m, name) => `\x00fn\x01${name}\x02(`);
   if (lang.keywords) esc = esc.replace(lang.keywords, m => m.startsWith('\x00') ? m : `\x00kw\x01${m}\x02`);
@@ -1270,8 +1340,9 @@ function updateLineNumbers() {
 }
 
 function syncScroll() {
-  highlight.style.transform = `translateY(-${editor.scrollTop}px) translateX(-${editor.scrollLeft}px)`;
-  lineNums.style.transform = `translateY(-${editor.scrollTop}px)`;
+  const _c = document.getElementById('editor-container');
+  highlight.style.transform = `translateY(-${_c.scrollTop}px) translateX(-${_c.scrollLeft}px)`;
+  lineNums.style.transform = `translateY(-${_c.scrollTop}px)`;
   updateMinimap();
 }
 
@@ -1388,7 +1459,7 @@ function renderTabs() {
 }
 
 function switchTab(i) {
-  tabs[currentTab].scroll = editor.scrollTop;
+  tabs[currentTab].scroll = document.getElementById('editor-container').scrollTop;
   tabs[currentTab].cursor = editor.selectionStart;
   currentTab = i;
   currentLang = tabs[i].lang;
@@ -1396,14 +1467,17 @@ function switchTab(i) {
   renderTabs();
 }
 
+let _newFileCtr = 1;
 function newFile() {
-  tabs.push({ name: 'new_file.txt', content: '', lang: 'plain', modified: false, history: [''], historyIdx: 0, scroll: 0 });
+  const name = _newFileCtr === 1 ? 'new_file.txt' : `new_file_${_newFileCtr}.txt`;
+  _newFileCtr++;
+  tabs.push({ name, content: '', lang: 'plain', modified: false, history: [''], historyIdx: 0, scroll: 0 });
   switchTab(tabs.length - 1);
 }
 
 function closeTab(e, i) {
   e.stopPropagation();
-  if (tabs.length === 1) { tabs[0].content = ''; tabs[0].modified = false; editor.value = ''; onInput(); return; }
+  if (tabs.length === 1) { tabs[0].content = ''; tabs[0].name = 'new_file.txt'; tabs[0].lang = 'plain'; tabs[0].modified = false; tabs[0].history = ['']; tabs[0].historyIdx = 0; editor.value = ''; currentLang = 'plain'; onInput(); renderTabs(); return; }
   tabs.splice(i, 1);
   if (currentTab >= tabs.length) currentTab = tabs.length - 1;
   loadTab(currentTab);
@@ -1486,7 +1560,7 @@ function doFind() {
   let m;
   while ((m = re.exec(text)) !== null) findMatches.push([m.index, m.index + m[0].length]);
   document.getElementById('find-count').textContent = findMatches.length ? `${findMatches.length} match${findMatches.length>1?'es':''}` : 'No matches';
-  if (findMatches.length) highlightFind(0);
+  if (findMatches.length) { findIdx = Math.min(Math.max(findIdx,0), findMatches.length-1); highlightFind(findIdx); }
 }
 
 function findNext() { if (!findMatches.length) return; findIdx = (findIdx + 1) % findMatches.length; highlightFind(findIdx); }
@@ -1726,14 +1800,6 @@ function toggleDontShow(cb) {
   } catch(e) {}
 }
 
-// Close welcome on Escape (editor keydown handles it too but welcome might be open)
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    const panel = document.getElementById('welcome-panel');
-    if (panel && panel.style.display !== 'none') closeWelcome();
-  }
-});
-
 // ============ MENU ============
 function toggleMenu(id, e) {
   e = e || window.event;
@@ -1776,7 +1842,10 @@ function showAbout() {
   toast('Webpad — Notepad++ inspired web editor');
 }
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && findbar.classList.contains('visible')) toggleFind();
+  if (e.key !== 'Escape') return;
+  const panel = document.getElementById('welcome-panel');
+  if (panel && panel.style.display !== 'none') { closeWelcome(); return; }
+  if (findbar.classList.contains('visible')) toggleFind();
 });
 
 
@@ -1911,6 +1980,161 @@ function setVoiceUI(active) {
 // Stop voice if tab switches or window hides
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && voiceActive) toggleVoice();
+});
+
+
+// ============ AUTH & SESSION ============
+let currentUser = null;
+
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem('webpad-users') || '{}'); } catch(e) { return {}; }
+}
+function saveUsers(u) {
+  try { localStorage.setItem('webpad-users', JSON.stringify(u)); } catch(e) {}
+}
+function hashPass(p) {
+  let h = 5381;
+  for (let i = 0; i < p.length; i++) { h = ((h << 5) + h) ^ p.charCodeAt(i); h >>>= 0; }
+  return 'h' + h.toString(36);
+}
+
+function showLoginForm(which) {
+  document.getElementById('form-signin').classList.toggle('active', which === 'signin');
+  document.getElementById('form-signup').classList.toggle('active', which === 'signup');
+  document.getElementById('tab-signin').classList.toggle('active', which === 'signin');
+  document.getElementById('tab-signup').classList.toggle('active', which === 'signup');
+  document.getElementById('login-error').textContent = '';
+}
+
+function doSignIn() {
+  const user = document.getElementById('si-user').value.trim();
+  const pass = document.getElementById('si-pass').value;
+  const err = document.getElementById('login-error');
+  if (!user || !pass) { err.textContent = 'Please fill in all fields.'; return; }
+  const users = getUsers();
+  if (!users[user]) { err.textContent = 'Account not found. Please create one.'; return; }
+  if (users[user].hash !== hashPass(pass)) { err.textContent = 'Incorrect password.'; return; }
+  loginSuccess(user);
+}
+
+function doSignUp() {
+  const user = document.getElementById('su-user').value.trim();
+  const email = document.getElementById('su-email').value.trim();
+  const pass = document.getElementById('su-pass').value;
+  const err = document.getElementById('login-error');
+  if (!user || !pass) { err.textContent = 'Username and password are required.'; return; }
+  if (user.length < 3) { err.textContent = 'Username must be at least 3 characters.'; return; }
+  if (pass.length < 4) { err.textContent = 'Password must be at least 4 characters.'; return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(user)) { err.textContent = 'Username: letters, numbers, underscore only.'; return; }
+  const users = getUsers();
+  if (users[user]) { err.textContent = 'Username already taken. Try another.'; return; }
+  users[user] = { hash: hashPass(pass), email, created: Date.now() };
+  saveUsers(users);
+  loginSuccess(user);
+}
+
+function loginSuccess(username) {
+  currentUser = username;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('user-avatar').textContent = username[0].toUpperCase();
+  document.getElementById('user-name-display').textContent = username;
+  document.getElementById('user-menu-info').textContent = 'Signed in as ' + username;
+  restoreSession(username);
+  toast('Welcome, ' + username + '!');
+}
+
+function continueAsGuest() {
+  currentUser = null;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('user-avatar').textContent = 'G';
+  document.getElementById('user-name-display').textContent = 'Guest';
+  document.getElementById('user-menu-info').textContent = 'Guest — session not saved';
+}
+
+function doSignOut() {
+  if (currentUser) saveSession();
+  currentUser = null;
+  document.getElementById('user-badge').classList.remove('open');
+  tabs = [{ name: 'new_file.txt', content: '', lang: 'plain', modified: false, history: [''], historyIdx: 0, scroll: 0 }];
+  currentTab = 0; currentLang = 'plain';
+  loadTab(0); renderTabs();
+  document.getElementById('user-avatar').textContent = 'G';
+  document.getElementById('user-name-display').textContent = 'Guest';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('si-user').value = '';
+  document.getElementById('si-pass').value = '';
+  document.getElementById('login-error').textContent = '';
+  showLoginForm('signin');
+}
+
+function toggleUserMenu(e) {
+  e.stopPropagation();
+  document.getElementById('user-badge').classList.toggle('open');
+}
+document.addEventListener('click', function() {
+  const ub = document.getElementById('user-badge');
+  if (ub) ub.classList.remove('open');
+});
+
+function sessionKey(user) { return 'webpad-session-' + user; }
+
+function saveSession() {
+  if (!currentUser) { toast('Sign in to save sessions'); return; }
+  const session = {
+    tabs: tabs.map(t => ({ name: t.name, content: t.content, lang: t.lang, scroll: t.scroll || 0 })),
+    currentTab, fontSize, wordWrap, savedAt: Date.now()
+  };
+  try {
+    localStorage.setItem(sessionKey(currentUser), JSON.stringify(session));
+    toast('Session saved \u2713');
+  } catch(e) { toast('Save failed: storage may be full'); }
+}
+
+function restoreSession(username) {
+  try {
+    const raw = localStorage.getItem(sessionKey(username));
+    if (!raw) { toast('No saved session found. Starting fresh.'); return; }
+    const session = JSON.parse(raw);
+    if (!session.tabs || !session.tabs.length) return;
+    tabs = session.tabs.map(t => ({
+      name: t.name || 'untitled',
+      content: t.content || '',
+      lang: t.lang || 'plain',
+      modified: false,
+      history: [t.content || ''],
+      historyIdx: 0,
+      scroll: t.scroll || 0
+    }));
+    currentTab = Math.min(session.currentTab || 0, tabs.length - 1);
+    fontSize = session.fontSize || 13;
+    wordWrap = !!session.wordWrap;
+    editor.style.fontSize = highlight.style.fontSize = lineNums.style.fontSize = fontSize + 'px';
+    if (wordWrap) { editor.style.whiteSpace = 'pre-wrap'; highlight.style.whiteSpace = 'pre-wrap'; }
+    loadTab(currentTab);
+    renderTabs();
+    const d = new Date(session.savedAt);
+    toast('Session restored (saved ' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString() + ')');
+  } catch(e) { console.warn('Session restore failed:', e); }
+}
+
+function loadSession() {
+  if (!currentUser) { toast('Sign in to load saved sessions'); return; }
+  restoreSession(currentUser);
+  document.getElementById('user-badge').classList.remove('open');
+}
+
+// Auto-save every 60s when logged in
+setInterval(function() { if (currentUser) saveSession(); }, 60000);
+window.addEventListener('beforeunload', function() { if (currentUser) saveSession(); });
+
+// Enter key on login fields
+window.addEventListener('DOMContentLoaded', function() {
+  const siUser = document.getElementById('si-user');
+  const siPass = document.getElementById('si-pass');
+  const suPass = document.getElementById('su-pass');
+  if (siUser) siUser.addEventListener('keydown', function(e) { if (e.key === 'Enter') siPass && siPass.focus(); });
+  if (siPass) siPass.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSignIn(); });
+  if (suPass) suPass.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSignUp(); });
 });
 
 // ============ GO ============
